@@ -74,13 +74,13 @@ class AddressModel {
 
     return AddressModel(
       id: snapshot.id,
-      name: data['Name'] as String,
-      phoneNumber: data['PhoneNumber'] as String,
-      street: data['Street'] as String,
-      city: data['City'] as String,
-      state: data['State'] as String,
-      postalCode: data['PostalCode'] as String,
-      country: data['Country'] as String,
+      name: data['Name'] ?? '',
+      phoneNumber: data['PhoneNumber'] ?? '',
+      street: data['Street'] ?? '',
+      city: data['City'] ?? '',
+      state: data['State'] ?? '',
+      postalCode: data['PostalCode'] ?? '',
+      country: data['Country'] ?? '',
       selectedAddress: data['SelectedAddress'] as bool,
       dateTime: (data['DateTime'] as Timestamp).toDate(),
     );
@@ -89,5 +89,5 @@ class AddressModel {
   @override
   String toString() {
     return '$street,$city,$state,$postalCode,$country';
-    }
+  }
 }

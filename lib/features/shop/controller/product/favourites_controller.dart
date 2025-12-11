@@ -36,21 +36,23 @@ class FavoritesController extends GetxController {
       favorites[productId] = true;
       saveFavoritesToStorage();
       TLoaders.customToast(message: 'Product has been added to Wishlist.');
-    }else{
+    } else {
       TLocalStorage.instance().removeData(productId);
       favorites.remove(productId);
       saveFavoritesToStorage();
       favorites.refresh();
-      TLoaders.customToast(message: 'Product has been removed from the Wishlist.');
+      TLoaders.customToast(
+          message: 'Product has been removed from the Wishlist.');
     }
   }
 
-  void saveFavoritesToStorage(){
+  void saveFavoritesToStorage() {
     final encodedFavourites = json.encode(favorites);
-    TLocalStorage.instance().saveData('favorites', encodedFavourites);
+    TLocalStorage.instance().writeData('favorites', encodedFavourites);
   }
 
-  Future<List<ProductModel>> favoriteProducts()async{
-    return await ProductRepository.instance.getFavouriteProducts(favorites.keys.toList());
+  Future<List<ProductModel>> favoriteProducts() async {
+    return await ProductRepository.instance
+        .getFavouriteProducts(favorites.keys.toList());
   }
 }

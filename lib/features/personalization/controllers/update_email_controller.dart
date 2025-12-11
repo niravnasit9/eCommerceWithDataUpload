@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/user/user_repository.dart';
+import 'package:yt_ecommerce_admin_panel/features/authentication/controllers/signup/verify_email_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/controllers/user_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/screens/profile/profile.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/image_strings.dart';
@@ -44,10 +45,11 @@ class UpdateEmailController extends GetxController {
         return;
       }
 
-      // Update user's First & Last name in the Firebase Firestore
+      // Update user's Email in the Firebase Firestore
       Map<String, dynamic> name = {
         'Email': email.text.trim(),
       };
+      VerifyEmailController();
       await userRepository.updateSingleField(name);
 
       // Update the Rx User Value
@@ -58,7 +60,7 @@ class UpdateEmailController extends GetxController {
 
       // Show Success Message
       TLoaders.successSnackBar(
-          title: 'Congratulations', message: 'Your Name has been updated.');
+          title: 'Congratulations', message: 'Your Email has been updated.');
 
       // Move to Previous screen.
       Get.off(() => const ProfileScreen());

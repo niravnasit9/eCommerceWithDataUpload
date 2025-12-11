@@ -3,16 +3,17 @@ import 'package:get/get.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/appbar/appbar.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/custom_shapes/containers/rounded_container.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/products/cart/coupon_widget.dart';
-import 'package:yt_ecommerce_admin_panel/common/widgets/success_screen/success_screen.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/cart_controller.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/order_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/cart/widgets/cart_items.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/checkout/widgets/billing_address_section.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/checkout/widgets/billing_amout_section.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/checkout/widgets/billing_payment_section.dart';
-import 'package:yt_ecommerce_admin_panel/navigation_menu.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
-import 'package:yt_ecommerce_admin_panel/utils/constants/image_strings.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
+import 'package:yt_ecommerce_admin_panel/utils/helpers/pricing_calculator.dart';
+import 'package:yt_ecommerce_admin_panel/utils/popups/loaders.dart';
 
 class CheckoutScreen extends StatelessWidget {
   const CheckoutScreen({super.key});
@@ -20,6 +21,10 @@ class CheckoutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
+    final cartController = CartController.instance;
+    final subTotal = cartController.totalCartPrice.value;
+    final orderController = Get.put(OrderController());
+    final totalAmount = TPricingCalculator.calculateTotalPrice(subTotal, 'IN');
     return Scaffold(
       appBar: TAppBar(
         title: Text('Order Review',
@@ -71,15 +76,14 @@ class CheckoutScreen extends StatelessWidget {
 
       /// Checkout Button
       bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(TSizes.defaultSpace),
+        padding: const EdgeInsets.all(TSizes.defaultSpace),
         child: ElevatedButton(
-            onPressed: () => Get.to(() => SuccessScreen(
-                  image: TImages.successfulPaymentIcon,
-                  title: 'Payment Success!',
-                  subTitle: 'Your Item will be Shipping soon!',
-                  onPressed: () => Get.offAll(() => NavigationMenu()),
-                )),
-            child: Text('Checkout \$256.0')),
+            onPressed: subTotal > 0
+                ? () => orderController.processOrder(totalAmount)
+                : TLoaders.warningSnackBar(
+                    title: 'Empty Cart',
+                    message: 'Add items to the cart in order to proceed.'),
+            child: Text('Checkout \$$totalAmount')),
       ),
     );
   }

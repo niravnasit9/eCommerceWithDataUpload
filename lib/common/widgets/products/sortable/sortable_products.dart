@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/layouts/grid_layout.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/products/product_cards/product_card_vertical.dart';
-import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/all_product_controller.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/controller/all_product_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/product_model.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 

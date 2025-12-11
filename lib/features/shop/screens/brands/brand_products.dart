@@ -3,7 +3,7 @@ import 'package:yt_ecommerce_admin_panel/common/widgets/appbar/appbar.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/brands/brand_card.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/products/sortable/sortable_products.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/shimmers/vertical_product_shimmer.dart';
-import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/brand_controller.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/controller/brand_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/brand_model.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/cloud_helper_functions.dart';

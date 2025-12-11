@@ -9,20 +9,15 @@ import 'package:yt_ecommerce_admin_panel/data/repositories/authentication/authen
 import 'firebase_options.dart';
 
 Future<void> main() async {
-  /// Widgets Binding
   final WidgetsBinding widgetsBinding =
       WidgetsFlutterBinding.ensureInitialized();
 
-  /// GetX Local Storage
   await GetStorage.init();
-  
-  /// Await Splash until other item load
+
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  /// Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform).then((value) => Get.put(AuthenticationRepository()));
-
-  // Initialize Authentication
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+      .then((value) => Get.put(AuthenticationRepository()));
 
   runApp(const App());
 }

@@ -36,9 +36,8 @@ class AuthenticationRepository extends GetxController {
 
     if (user != null) {
       if (user.emailVerified) {
-
         await TLocalStorage.init(user.uid);
-        Get.offAll(() => NavigationMenu());
+        Get.offAll(() => const NavigationMenu());
       } else {
         Get.offAll(() => VerifyEmailScreen(email: _auth.currentUser?.email));
       }

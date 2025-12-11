@@ -5,7 +5,7 @@ import 'package:yt_ecommerce_admin_panel/common/widgets/brands/brand_card.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/layouts/grid_layout.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/shimmers/brand_shimmer.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/texts/section_heading.dart';
-import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/brand_controller.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/controller/brand_controller.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 
 import 'brand_products.dart';

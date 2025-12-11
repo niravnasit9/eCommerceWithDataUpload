@@ -42,12 +42,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDwgQAhIdx8aHbOmKyRKsYUaoS9CstpNhc',
-    appId: '1:591592724316:web:99fb72d6a1788d75245399',
+    appId: '1:591592724316:web:0df239147cdd7762245399',
     messagingSenderId: '591592724316',
     projectId: 'ecommerceapp-fb6f1',
     authDomain: 'ecommerceapp-fb6f1.firebaseapp.com',
     storageBucket: 'ecommerceapp-fb6f1.appspot.com',
-    measurementId: 'G-KBN7YZ355M',
+    measurementId: 'G-JMFXFL6G22',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -81,13 +81,13 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDwgQAhIdx8aHbOmKyRKsYUaoS9CstpNhc',
-    appId: '1:591592724316:web:0df239147cdd7762245399',
+    apiKey: 'AIzaSyCbCNlSYZQmzRSjT9PIGSdz5om0sgShfKg',
+    appId: '1:591592724316:web:ea6c3acea59df3b0245399',
     messagingSenderId: '591592724316',
     projectId: 'ecommerceapp-fb6f1',
     authDomain: 'ecommerceapp-fb6f1.firebaseapp.com',
     storageBucket: 'ecommerceapp-fb6f1.appspot.com',
-    measurementId: 'G-JMFXFL6G22',
+    measurementId: 'G-C0M0WBDTKS',
   );
 
 }

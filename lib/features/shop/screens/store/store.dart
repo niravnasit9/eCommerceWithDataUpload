@@ -9,7 +9,7 @@ import 'package:yt_ecommerce_admin_panel/common/widgets/products/cart/cart_menu_
 import 'package:yt_ecommerce_admin_panel/common/widgets/shimmers/brand_shimmer.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/texts/section_heading.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/controller/category_controller.dart';
-import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/brand_controller.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/controller/brand_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/product_model.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/brands/all_brands.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/brands/brand_products.dart';
@@ -35,9 +35,7 @@ class StoreScreen extends StatelessWidget {
           title:
               Text("Store", style: Theme.of(context).textTheme.headlineMedium),
           actions: [
-            TCartCounterIcon(
-              onPressed: () => Get.to(() => const CartScreen()),
-            ),
+            TCartCounterIcon(),
           ],
         ),
         body: NestedScrollView(

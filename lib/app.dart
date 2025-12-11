@@ -20,7 +20,6 @@ class App extends StatelessWidget {
       initialBinding: GeneralBindings(),
       getPages: AppRoutes.pages,
 
-      /// Show Loader or Circular Progress Indicator Meanwhile Authentication Repository is decide to show relevant Screen
       home: const Scaffold(
           backgroundColor: TColors.primary,
           body: Center(child: CircularProgressIndicator(color: Colors.white))),

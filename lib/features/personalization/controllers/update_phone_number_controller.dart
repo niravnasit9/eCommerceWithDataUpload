@@ -58,7 +58,7 @@ class UpdatePhoneNoController extends GetxController {
 
       // Show Success Message
       TLoaders.successSnackBar(
-          title: 'Congratulations', message: 'Your Name has been updated.');
+          title: 'Congratulations', message: 'Your Phone Number has been updated.');
 
       // Move to Previous screen.
       Get.off(() => const ProfileScreen());

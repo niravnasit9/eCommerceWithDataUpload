@@ -164,9 +164,9 @@ class UserController extends GetxController {
     try {
       final image = await ImagePicker().pickImage(
           source: ImageSource.gallery,
-          imageQuality: 70,
-          maxWidth: 512,
-          maxHeight: 512);
+          imageQuality: 100,
+          maxWidth: 800,
+          maxHeight: 800);
       if (image != null) {
         imageUploading.value = true;
         // Upload Image
