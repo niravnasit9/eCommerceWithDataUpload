@@ -56,7 +56,7 @@ class LoginController extends GetxController {
           .loginWithEmailAndPassword(email.text.trim(), password.text.trim());
 
       // /// Save User Record
-      // await userController.saveUserRecord(userCredential);
+      await userController.saveUserRecord(userCredential);
 
       /// Remove Loader
       TFullScreenLoader.stopLoading();
