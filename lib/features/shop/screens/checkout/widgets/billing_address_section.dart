@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/texts/section_heading.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/controllers/address_controller.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
+import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart'; // Ensure correct import
 
 class TBillingAddressSection extends StatelessWidget {
   const TBillingAddressSection({super.key});
@@ -9,49 +11,113 @@ class TBillingAddressSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final addressController = AddressController.instance;
+    final dark = THelperFunctions.isDarkMode(context);
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TSectionHeading(
-            title: 'Shipping Address',
-            buttonTitle: 'Change',
-            onPressed: () => addressController.selectNewAddressPopup(context)),
-        addressController.selectedAddress.value.id.isNotEmpty
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Nirav Nasit',
-                      style: Theme.of(context).textTheme.bodyLarge),
-                  const SizedBox(height: TSizes.spaceBtwItems / 2),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.phone,
-                        color: Colors.grey,
-                        size: 16,
-                      ),
-                      const SizedBox(width: TSizes.spaceBtwItems),
-                      Text('+91 9537795692',
-                          style: Theme.of(context).textTheme.bodyMedium),
-                    ],
+          title: 'Shipping Address',
+          buttonTitle: 'Change',
+          onPressed: () => addressController.selectNewAddressPopup(context),
+        ),
+        const SizedBox(height: TSizes.spaceBtwItems),
+        Obx(() {
+          final address = addressController.selectedAddress.value;
+
+          if (address.id.isEmpty) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: dark ? Colors.grey.shade900 : Colors.grey.shade100,
+                border: Border.all(
+                    color: dark ? Colors.grey.shade700 : Colors.grey.shade300),
+              ),
+              child: Text(
+                'Select Address',
+                style: theme.textTheme.bodyMedium,
+              ),
+            );
+          }
+
+          final fullAddress =
+              "${address.street}, ${address.city}, ${address.state}, "
+              "${address.postalCode}, ${address.country}";
+
+          return Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: dark ? Colors.grey.shade900 : Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: dark ? Colors.grey.shade700 : Colors.grey.shade300,
+              ),
+              boxShadow: [
+                if (!dark)
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                  const SizedBox(height: TSizes.spaceBtwItems / 2),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_history,
-                        color: Colors.grey,
-                        size: 16,
-                      ),
-                      const SizedBox(width: TSizes.spaceBtwItems),
-                      Text('Nikol,AHMEDABAD-382350',
-                          style: Theme.of(context).textTheme.bodyMedium),
-                    ],
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name
+                Text(
+                  address.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              )
-            : Text('Select Address',
-                style: Theme.of(context).textTheme.bodyMedium),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Phone Number
+                Row(
+                  children: [
+                    Icon(
+                      Icons.phone,
+                      size: 18,
+                      color: dark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      address.phoneNumber,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Full Address
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 18,
+                      color: dark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        fullAddress,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
       ],
     );
   }
