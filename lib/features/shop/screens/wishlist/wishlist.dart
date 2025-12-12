@@ -42,7 +42,11 @@ class FavouriteScreen extends StatelessWidget {
                   animation: TImages.pencilAnimation,
                   showAction: true,
                   actionText: 'Let\'s add some',
-                  onActionPressed: () => Get.off(() => const NavigationMenu()),
+                  onActionPressed: () {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      Get.offAll(() => const NavigationMenu());
+                    });
+                  },
                 );
                 const loader = TVerticalProductShimmer(itemCount: 6);
 

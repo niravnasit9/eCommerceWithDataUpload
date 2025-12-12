@@ -26,7 +26,11 @@ class TOrderListItems extends StatelessWidget {
             animation: TImages.orderCompletedAnimation,
             showAction: true,
             actionText: 'Let\'s fill it.',
-            onActionPressed: () => Get.off(() => const NavigationMenu()),
+            onActionPressed: () {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Get.offAll(() => const NavigationMenu());
+              });
+            },
           );
 
           final response = TCloudHelperFunctions.checkMultiRecordState(
