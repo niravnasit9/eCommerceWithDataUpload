@@ -3,7 +3,6 @@ import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/icons/t_circular_icon.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/cart_controller.dart';
-import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/product_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/product_model.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';

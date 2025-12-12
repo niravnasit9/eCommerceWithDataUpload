@@ -13,7 +13,6 @@ import 'package:yt_ecommerce_admin_panel/features/shop/controller/brand_controll
 import 'package:yt_ecommerce_admin_panel/features/shop/models/product_model.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/brands/all_brands.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/brands/brand_products.dart';
-import 'package:yt_ecommerce_admin_panel/features/shop/screens/cart/cart.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/store/widget/category_tab.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
