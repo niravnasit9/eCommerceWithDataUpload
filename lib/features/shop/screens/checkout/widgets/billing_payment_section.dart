@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/custom_shapes/containers/rounded_container.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/texts/section_heading.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/checkout_controller.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
-import 'package:yt_ecommerce_admin_panel/utils/constants/image_strings.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 

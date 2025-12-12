@@ -5,7 +5,6 @@ import 'package:yt_ecommerce_admin_panel/common/widgets/custom_shapes/containers
 import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/checkout_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/payment_method_model.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
-import 'package:yt_ecommerce_admin_panel/utils/constants/image_strings.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 
