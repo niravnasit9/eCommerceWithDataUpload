@@ -83,7 +83,7 @@ class CheckoutScreen extends StatelessWidget {
                 : TLoaders.warningSnackBar(
                     title: 'Empty Cart',
                     message: 'Add items to the cart in order to proceed.'),
-            child: Text('Checkout \$$totalAmount')),
+            child: Text('Checkout ₹$totalAmount')),
       ),
     );
   }

@@ -17,7 +17,7 @@ class TBillingAmountSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('SubTotal', style: Theme.of(context).textTheme.bodyMedium),
-            Text('\$$subTotal', style: Theme.of(context).textTheme.bodyMedium),
+            Text('₹$subTotal', style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
         const SizedBox(height: TSizes.spaceBtwItems / 2),
@@ -28,7 +28,7 @@ class TBillingAmountSection extends StatelessWidget {
           children: [
             Text('Shipping Fee', style: Theme.of(context).textTheme.bodyMedium),
             Text(
-                '\$${TPricingCalculator.calculateShippingCost(subTotal, 'IN')}',
+                '₹${TPricingCalculator.calculateShippingCost(subTotal, 'IN')}',
                 style: Theme.of(context).textTheme.labelLarge),
           ],
         ),
@@ -40,7 +40,7 @@ class TBillingAmountSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Tax Fee', style: Theme.of(context).textTheme.bodyMedium),
-            Text('\$${TPricingCalculator.calculateTax(subTotal, 'IN')}',
+            Text('₹${TPricingCalculator.calculateTax(subTotal, 'IN')}',
                 style: Theme.of(context).textTheme.labelLarge),
           ],
         ),
@@ -52,7 +52,7 @@ class TBillingAmountSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Order Total', style: Theme.of(context).textTheme.bodyMedium),
-            Text('\$${TPricingCalculator.calculateTotalPrice(subTotal, 'IN')}',
+            Text('₹${TPricingCalculator.calculateTotalPrice(subTotal, 'IN')}',
                 style: Theme.of(context).textTheme.titleMedium),
           ],
         ),

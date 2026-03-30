@@ -124,7 +124,8 @@ class _LoadDataState extends State<LoadData> {
     setState(() => _loadingBanners = true);
     _showLoadingOverlay('Syncing Banners\nPlease wait...');
     try {
-      await BannerRepository.instance.syncNewBannersOnly();
+      // Call this method to update only text data
+      await ProductRepository.instance.updateProductsWithoutImages();
       _hideLoadingOverlay();
       Get.snackbar(
         'Success',

@@ -44,7 +44,7 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         // Heading
                         TSectionHeading(
-                          title: "Popular Categories",
+                          title: "Popular Brands",
                           onPressed: () => Get.to(() => AllProducts(
                                 title: 'Popular Products',
                             futureMethod: controller.fetchAllFeaturedProducts(),
@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: TSizes.spaceBtwItems),
                         // Categories
-                        const THomeCategories(),
+                        const THomeBrands(),
                       ],
                     ),
                   ),

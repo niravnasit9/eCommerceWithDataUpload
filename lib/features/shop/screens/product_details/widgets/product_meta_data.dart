@@ -47,7 +47,7 @@ class TProductMetaData extends StatelessWidget {
             /// Price
             if (product.productType == ProductType.single.toString() &&
                 product.salePrice > 0)
-              Text("\$${product.price}",
+              Text("₹${product.price}",
                   style: Theme.of(context)
                       .textTheme
                       .titleSmall!
@@ -80,15 +80,14 @@ class TProductMetaData extends StatelessWidget {
         Row(
           children: [
             TCircularImage(
-              image: product.brand != null ? product.brand!.image : '',
+              image: product.brand.image,
               width: 32,
               height: 32,
               overlayColor: darkMode ? TColors.white : TColors.black,
               isNetworkImage: true,
             ),
             TBrandTitleWithVerifiedIcon(
-                title: product.brand != null ? product.brand!.name : '',
-                brandTextSizes: TextSizes.medium),
+                title: product.brand.name, brandTextSizes: TextSizes.medium),
           ],
         ),
       ],

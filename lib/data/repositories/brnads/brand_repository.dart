@@ -1,8 +1,9 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:yt_ecommerce_admin_panel/features/shop/models/brand_model.dart';
 import 'package:yt_ecommerce_admin_panel/utils/exceptions/firebase_exceptions.dart';
 import 'package:yt_ecommerce_admin_panel/utils/exceptions/format_exceptions.dart';
@@ -12,8 +13,11 @@ class BrandRepository extends GetxController {
   static BrandRepository get instance => Get.find();
 
   final _db = FirebaseFirestore.instance;
-  final _storage = FirebaseStorage.instance;
 
+  /// 🔥 CLOUDINARY CONFIG
+  final String cloudName = "dtnfznfid";
+  final String uploadPreset = "flutter_upload"; // EXACT SAME
+  
   /// Get all brands
   Future<List<BrandModel>> getAllBrands() async {
     try {
@@ -48,10 +52,9 @@ class BrandRepository extends GetxController {
           .limit(2)
           .get();
 
-      List<BrandModel> brands =
-          brandsQuery.docs.map((doc) => BrandModel.fromSnapshot(doc)).toList();
-
-      return brands;
+      return brandsQuery.docs
+          .map((doc) => BrandModel.fromSnapshot(doc))
+          .toList();
     } on FirebaseException catch (e) {
       throw TFirebaseException(e.code).message;
     } on FormatException {
@@ -63,50 +66,94 @@ class BrandRepository extends GetxController {
     }
   }
 
-  /// Upload or replace a single brand with image to Firebase Storage
-  Future<void> uploadOrReplaceBrand(BrandModel brand) async {
+  /// 🔥 Upload image to Cloudinary
+  Future<String> uploadToCloudinary(String assetPath) async {
     try {
-      ByteData byteData = await rootBundle.load(brand.image);
+      print("📦 Loading image: $assetPath");
+
+      ByteData byteData = await rootBundle.load(assetPath);
       Uint8List imageData = byteData.buffer.asUint8List();
 
-      final ref = _storage.ref().child('brands/${brand.id}.png');
-      await ref.putData(imageData);
-      final downloadUrl = await ref.getDownloadURL();
+      final uri =
+          Uri.parse("https://api.cloudinary.com/v1_1/$cloudName/image/upload");
 
-      brand.image = downloadUrl;
+      var request = http.MultipartRequest("POST", uri);
 
-      await _db.collection('Brands').doc(brand.id).set(brand.toJson());
-    } on FirebaseException catch (e) {
-      throw TFirebaseException(e.code).message;
+      request.fields['upload_preset'] = uploadPreset;
+      request.files.add(http.MultipartFile.fromBytes(
+        'file',
+        imageData,
+        filename: "brand.png",
+      ));
+
+      print("☁️ Uploading to Cloudinary...");
+
+      var response = await request.send();
+      var resBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        final data = json.decode(resBody);
+        print("✅ Cloudinary Upload Success: ${data['secure_url']}");
+        return data['secure_url'];
+      } else {
+        print("❌ Cloudinary Upload Failed");
+        print("Status: ${response.statusCode}");
+        print("Response: $resBody");
+        throw "Cloudinary upload failed";
+      }
     } catch (e) {
-      throw 'Error uploading brand: $e';
+      print("❌ Cloudinary ERROR: $e");
+      throw e;
     }
   }
 
-  /// Upload all brands — Only add NEW ones, never delete existing
+  /// 🔥 Upload or Replace Brand (Cloudinary Based)
+  Future<void> uploadOrReplaceBrand(BrandModel brand) async {
+    try {
+      print("🔵 START Upload Brand: ${brand.name}");
+
+      /// Upload to Cloudinary
+      final imageUrl = await uploadToCloudinary(brand.image);
+
+      /// Replace local path with URL
+      brand.image = imageUrl;
+
+      /// Save to Firestore
+      await _db.collection('Brands').doc(brand.id).set(brand.toJson());
+
+      print("✅ Brand Uploaded: ${brand.name}");
+    } on FirebaseException catch (e) {
+      print("❌ FIREBASE ERROR");
+      print("Code: ${e.code}");
+      print("Message: ${e.message}");
+      throw TFirebaseException(e.code).message;
+    } catch (e) {
+      print("❌ ERROR uploading brand ${brand.name}: $e");
+      throw e.toString();
+    }
+  }
+
+  /// 🔥 Upload ALL brands (NO SKIP, ALWAYS REPLACE)
   Future<void> uploadAllBrands(List<BrandModel> brands) async {
     try {
-      // Fetch all existing brand IDs from Firestore
-      final snapshot = await _db.collection('Brands').get();
-      final existingIds = snapshot.docs.map((doc) => doc.id).toSet();
+      print("🚀 START Uploading All Brands");
 
       for (var brand in brands) {
-        // Skip if this brand already exists
-        if (existingIds.contains(brand.id)) {
-          print('Skipping existing brand: ${brand.name}');
-          continue;
-        }
+        print("➡️ Processing brand: ${brand.name}");
 
-        // New brand — upload it
-        await uploadOrReplaceBrand(brand);
-        print('Added new brand: ${brand.name}');
+        try {
+          await uploadOrReplaceBrand(brand);
+        } catch (e) {
+          print("❌ ERROR in brand: ${brand.name}");
+          print("Error: $e");
+        }
       }
 
-      print('Brand sync complete. Only new brands were added.');
+      print("🎉 ALL BRANDS PROCESSED");
     } on FirebaseException catch (e) {
       throw TFirebaseException(e.code).message;
     } catch (e) {
-      throw 'Error syncing brands: $e';
+      throw 'Error uploading brands: $e';
     }
   }
 }

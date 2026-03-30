@@ -36,7 +36,11 @@ class AllProductController extends GetxController {
         products.sort((a, b) => a.price.compareTo(b.price));
         break;
       case 'Newest':
-        products.sort((a, b) => a.date!.compareTo(b.date!));
+        products.sort((a, b) {
+          final aDate = a.createdAt ?? DateTime(2000);
+          final bDate = b.createdAt ?? DateTime(2000);
+          return bDate.compareTo(aDate); // newest first
+        });
         break;
       case 'Sale':
         products.sort((a, b) {
@@ -51,11 +55,11 @@ class AllProductController extends GetxController {
         break;
       default:
         //
-        products.sort((a,b)=>a.title.compareTo(b.title));
+        products.sort((a, b) => a.title.compareTo(b.title));
     }
   }
 
-  void assignProducts(List<ProductModel>products){
+  void assignProducts(List<ProductModel> products) {
     this.products.assignAll(products);
     sortProducts('Name');
   }

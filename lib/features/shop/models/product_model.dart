@@ -1,24 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/models/brand_model.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/product_attribute_model.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/product_variation_model.dart';
 
-import 'brand_model.dart';
-
 class ProductModel {
   String id;
-  int stock;
-  String? sku;
-  double price;
   String title;
-  DateTime? date;
+  int stock;
+  double price;
   double salePrice;
+
   String thumbnail;
-  bool? isFeatured;
-  BrandModel? brand;
-  String? description;
-  String? categoryId;
   List<String>? images;
+
   String productType;
+  String categoryId;
+
+  /// NEW AMAZON TYPE DATA
+  String shortDescription;
+  String fullDescription;
+  List<String> highlights;
+  Map<String, String> specifications;
+
+  bool isFeatured;
+
+  /// DATE
+  DateTime? createdAt;
+  DateTime? updatedAt;
+
+  BrandModel brand;
+
   List<ProductAttributeModel>? productAttributes;
   List<ProductVariationModel>? productVariations;
 
@@ -27,102 +38,114 @@ class ProductModel {
     required this.title,
     required this.stock,
     required this.price,
+    required this.salePrice,
     required this.thumbnail,
-    required this.productType,
-    this.sku,
-    this.brand,
-    this.date,
     this.images,
-    this.salePrice = 0.0,
-    this.isFeatured,
-    this.categoryId,
-    this.description,
+    required this.productType,
+    required this.categoryId,
+    this.shortDescription = '',
+    this.fullDescription = '',
+    this.highlights = const [],
+    this.specifications = const {},
+    required this.brand,
     this.productAttributes,
     this.productVariations,
+    this.isFeatured = false,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  /// Create Empty Func to Clean Code
+  /// EMPTY
   static ProductModel empty() => ProductModel(
-      id: '', title: '', stock: 0, price: 0, thumbnail: '', productType: '');
+        id: '',
+        title: '',
+        stock: 0,
+        price: 0,
+        salePrice: 0,
+        thumbnail: '',
+        images: [],
+        productType: '',
+        categoryId: '',
+        brand: BrandModel.empty(),
+        shortDescription: '',
+        fullDescription: '',
+        highlights: [],
+        specifications: {},
+        productAttributes: [],
+        productVariations: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-  /// JSON Format
-  toJson() {
+  /// TO JSON
+  Map<String, dynamic> toJson() {
     return {
-      'SKU': sku,
+      'Id': id,
       'Title': title,
       'Stock': stock,
       'Price': price,
-      'Images': images ?? [],
-      'Thumbnail': thumbnail,
       'SalePrice': salePrice,
-      'IsFeatured': isFeatured,
-      'CategoryId': categoryId,
-      'Brand': brand!.toJson(),
-      'Description': description,
+      'Thumbnail': thumbnail,
+      'Images': images,
       'ProductType': productType,
-      'ProductAttributes': productAttributes != null
-          ? productAttributes!.map((e) => e.toJson()).toList()
-          : [],
-      'ProductVariations': productVariations != null
-          ? productVariations!.map((e) => e.toJson()).toList()
-          : [],
+      'CategoryId': categoryId,
+
+      'ShortDescription': shortDescription,
+      'FullDescription': fullDescription,
+      'Highlights': highlights,
+      'Specifications': specifications,
+
+      'IsFeatured': isFeatured,
+
+      /// ✅ FIXED DATE
+      'CreatedAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
+
+      'UpdatedAt': FieldValue.serverTimestamp(),
+
+      'Brand': brand.toJson(),
+      'ProductAttributes': productAttributes?.map((e) => e.toJson()).toList(),
+      'ProductVariations': productVariations?.map((e) => e.toJson()).toList(),
     };
   }
 
-  /// Map Json oriented document snapshot from Firebase to Model
-  factory ProductModel.fromSnapshot(
-      DocumentSnapshot<Map<String, dynamic>> document) {
-    if (document.data() == null) return ProductModel.empty();
-    final data = document.data()!;
+  /// FROM FIREBASE
+  factory ProductModel.fromSnapshot(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
     return ProductModel(
-      id: document.id,
-      sku: data['SKU'] ?? '',
+      id: data['Id'] ?? '',
       title: data['Title'] ?? '',
       stock: data['Stock'] ?? 0,
-      isFeatured: data['IsFeatured'] ?? false,
-      price: double.parse((data['Price'] ?? 0.0).toString()),
-      salePrice: double.parse((data['SalePrice'] ?? 0.0).toString()),
+      price: double.parse((data['Price'] ?? 0).toString()),
+      salePrice: double.parse((data['SalePrice'] ?? 0).toString()),
       thumbnail: data['Thumbnail'] ?? '',
-      categoryId: data['CategoryId'] ?? '',
-      description: data['Description'] ?? '',
+      images: List<String>.from(data['Images'] ?? []),
       productType: data['ProductType'] ?? '',
-      brand: BrandModel.fromJson(data['Brand']),
-      images: data['Images'] != null ? List<String>.from(data['Images']) : [],
-      productAttributes: (data['ProductAttributes'] as List<dynamic>)
-          .map((e) => ProductAttributeModel.fromJson(e))
-          .toList(),
-      productVariations: (data['ProductVariations'] as List<dynamic>)
-          .map((e) => ProductVariationModel.fromJson(e))
-          .toList(),
-    );
-  }
-
-  /// Map Json oriented document snapshot from Firebase to Model
-  factory ProductModel.fromQuerySnapshot(
-      QueryDocumentSnapshot<Object?> document) {
-    if (document.data() == null) return ProductModel.empty();
-
-    final data = document.data() as Map<String, dynamic>;
-    return ProductModel(
-      id: document.id,
-      sku: data['SKU'] ?? '',
-      title: data['Title'] ?? '',
-      stock: data['Stock'] ?? 0,
+      categoryId: data['CategoryId'] ?? '',
+      shortDescription: data['ShortDescription'] ?? '',
+      fullDescription: data['FullDescription'] ?? '',
+      highlights: List<String>.from(data['Highlights'] ?? []),
+      specifications: Map<String, String>.from(data['Specifications'] ?? {}),
       isFeatured: data['IsFeatured'] ?? false,
-      price: double.parse((data['Price'] ?? 0.0).toString()),
-      salePrice: double.parse((data['SalePrice'] ?? 0.0).toString()),
-      thumbnail: data['Thumbnail'] ?? '',
-      categoryId: data['CategoryId'] ?? '',
-      description: data['Description'] ?? '',
-      productType: data['ProductType'] ?? '',
+      createdAt: data['CreatedAt'] != null
+          ? (data['CreatedAt'] as Timestamp).toDate()
+          : null,
+      updatedAt: data['UpdatedAt'] != null
+          ? (data['UpdatedAt'] as Timestamp).toDate()
+          : null,
       brand: BrandModel.fromJson(data['Brand']),
-      images: data['Images'] != null ? List<String>.from(data['Images']) : [],
-      productAttributes: (data['ProductAttributes'] as List<dynamic>)
-          .map((e) => ProductAttributeModel.fromJson(e))
-          .toList(),
-      productVariations: (data['ProductVariations'] as List<dynamic>)
-          .map((e) => ProductVariationModel.fromJson(e))
-          .toList(),
+      productAttributes: data['ProductAttributes'] != null
+          ? (data['ProductAttributes'] as List)
+              .map((e) => ProductAttributeModel.fromJson(e))
+              .toList()
+          : [],
+      productVariations: data['ProductVariations'] != null
+          ? (data['ProductVariations'] as List)
+              .map((e) => ProductVariationModel.fromJson(e))
+              .toList()
+          : [],
     );
   }
 }
