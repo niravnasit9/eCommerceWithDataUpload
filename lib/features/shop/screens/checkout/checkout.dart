@@ -4,6 +4,7 @@ import 'package:yt_ecommerce_admin_panel/common/widgets/appbar/appbar.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/custom_shapes/containers/rounded_container.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/products/cart/coupon_widget.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/cart_controller.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/checkout_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/order_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/cart/widgets/cart_items.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/checkout/widgets/billing_address_section.dart';
@@ -22,6 +23,7 @@ class CheckoutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
     final cartController = CartController.instance;
+    final checkoutController = CheckoutController.instance;
     final subTotal = cartController.totalCartPrice.value;
     final orderController = Get.put(OrderController());
     final totalAmount = TPricingCalculator.calculateTotalPrice(subTotal, 'IN');
@@ -75,15 +77,36 @@ class CheckoutScreen extends StatelessWidget {
       ),
 
       /// Checkout Button
+
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(TSizes.defaultSpace),
         child: ElevatedButton(
-            onPressed: subTotal > 0
-                ? () => orderController.processOrder(totalAmount)
-                : TLoaders.warningSnackBar(
+          onPressed: subTotal > 0
+              ? () {
+                  final method =
+                      checkoutController.selectedPaymentMethod.value.name;
+
+                  print('Selected Payment: $method'); // debug
+
+                  if (method == 'Razorpay') {
+                    orderController.processOrder(totalAmount);
+                  } else if (method == 'Cash on Delivery') {
+                    orderController.processCODOrder(totalAmount);
+                  } else {
+                    TLoaders.warningSnackBar(
+                      title: 'Select Payment Method',
+                      message: 'Please select a valid payment method.',
+                    );
+                  }
+                }
+              : () {
+                  TLoaders.warningSnackBar(
                     title: 'Empty Cart',
-                    message: 'Add items to the cart in order to proceed.'),
-            child: Text('Checkout ₹$totalAmount')),
+                    message: 'Add items to the cart in order to proceed.',
+                  );
+                },
+          child: Text('Checkout ₹$totalAmount'),
+        ),
       ),
     );
   }
