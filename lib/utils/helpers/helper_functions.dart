@@ -156,13 +156,13 @@ class THelperFunctions {
     return false;
   }
 
-  /// Save theme preference
-  static Future<void> _saveThemePreference(bool isDarkMode) async {
-    // Implement SharedPreferences to save theme preference
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.setBool('isDarkMode', isDarkMode);
-    print('💾 Theme preference saved: ${isDarkMode ? "Dark" : "Light"}');
-  }
+  // /// Save theme preference
+  // static Future<void> _saveThemePreference(bool isDarkMode) async {
+  //   // Implement SharedPreferences to save theme preference
+  //   // final prefs = await SharedPreferences.getInstance();
+  //   // await prefs.setBool('isDarkMode', isDarkMode);
+  //   print('💾 Theme preference saved: ${isDarkMode ? "Dark" : "Light"}');
+  // }
 
   /// Initialize theme based on saved preference
   static Future<void> initializeTheme() async {

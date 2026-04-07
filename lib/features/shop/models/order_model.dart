@@ -61,8 +61,8 @@ class OrderModel {
         return 'Cancelled';
       case OrderStatus.refunded:
         return 'Refunded';
-      default:
-        return 'Pending';
+      // default:
+      //   return 'Pending';
     }
   }
 
