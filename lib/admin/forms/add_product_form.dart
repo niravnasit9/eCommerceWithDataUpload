@@ -46,6 +46,7 @@ class _AddProductFormState extends State<AddProductForm> {
   final List<String> existingImageUrls = [];
   File? thumbnailImage;
   String? existingThumbnailUrl;
+  bool _isUploading = false;
 
   // Attributes & Variations
   final List<ProductAttributeModel> attributes = [];
@@ -87,6 +88,8 @@ class _AddProductFormState extends State<AddProductForm> {
     'Charging': ['67W Fast Charging', '100W Fast Charging', '120W HyperCharge', '45W Fast Charging'],
   };
 
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
@@ -98,7 +101,6 @@ class _AddProductFormState extends State<AddProductForm> {
     
     controller.fetchBrands();
     
-    // If editing, set selected brand after brands are loaded
     if (isEditing && widget.product != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final matchingBrand = controller.brands.firstWhere(
@@ -138,6 +140,45 @@ class _AddProductFormState extends State<AddProductForm> {
     if (product.productVariations != null) {
       variations.addAll(product.productVariations!);
     }
+  }
+
+  Future<void> _pickImages() async {
+    final List<XFile>? images = await _picker.pickMultiImage();
+    if (images != null && images.isNotEmpty) {
+      setState(() {
+        for (var image in images) {
+          selectedImages.add(File(image.path));
+        }
+      });
+    }
+  }
+
+  Future<void> _pickThumbnail() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        thumbnailImage = File(image.path);
+      });
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      selectedImages.removeAt(index);
+    });
+  }
+
+  void _removeExistingImage(int index) {
+    setState(() {
+      existingImageUrls.removeAt(index);
+    });
+  }
+
+  void _removeThumbnail() {
+    setState(() {
+      thumbnailImage = null;
+      existingThumbnailUrl = null;
+    });
   }
 
   @override
@@ -182,7 +223,6 @@ class _AddProductFormState extends State<AddProductForm> {
               
               /// Price Row
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: _buildTextField(
@@ -210,7 +250,6 @@ class _AddProductFormState extends State<AddProductForm> {
               
               /// Stock & Brand Row
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: _buildTextField(
@@ -279,14 +318,16 @@ class _AddProductFormState extends State<AddProductForm> {
 
               const SizedBox(height: TSizes.spaceBtwSections),
 
-              /// Images Section
-              _buildSectionTitle('Product Images', action: 'Add Image', onAction: _addImage),
+              /// Product Images Section
+              _buildSectionTitle('Product Images', action: 'Add Images', onAction: _pickImages),
               const SizedBox(height: TSizes.spaceBtwItems),
               _buildImagesGrid(),
               const SizedBox(height: TSizes.spaceBtwItems),
               
-              /// Thumbnail Selector
-              _buildThumbnailSelector(),
+              /// Thumbnail Section
+              _buildSectionTitle('Thumbnail Image'),
+              const SizedBox(height: TSizes.spaceBtwItems),
+              _buildThumbnailPicker(),
 
               const SizedBox(height: TSizes.spaceBtwSections),
 
@@ -339,19 +380,31 @@ class _AddProductFormState extends State<AddProductForm> {
 
               const SizedBox(height: TSizes.spaceBtwSections),
 
-              /// Save Button
+              /// Submit Button
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 55,
                 child: ElevatedButton(
-                  onPressed: _saveProduct,
+                  onPressed: _isUploading ? null : _saveProduct,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: TColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
+                    ),
                   ),
-                  child: Text(
-                    isEditing ? 'Update Product' : 'Add Product',
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child: _isUploading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          isEditing ? 'Update Product' : 'Create Product',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
                 ),
               ),
             ],
@@ -374,6 +427,9 @@ class _AddProductFormState extends State<AddProductForm> {
             onPressed: onAction,
             icon: const Icon(Iconsax.add, size: 16),
             label: Text(action),
+            style: TextButton.styleFrom(
+              foregroundColor: TColors.primary,
+            ),
           ),
       ],
     );
@@ -438,42 +494,9 @@ class _AddProductFormState extends State<AddProductForm> {
     );
   }
 
-  // Image selection methods
-  Future<void> _addImage() async {
-    final picker = ImagePicker();
-    final List<XFile>? images = await picker.pickMultiImage();
-    if (images != null && images.isNotEmpty) {
-      setState(() {
-        for (var image in images) {
-          selectedImages.add(File(image.path));
-        }
-      });
-    }
-  }
-
-  Future<void> _selectThumbnail() async {
-    final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        thumbnailImage = File(image.path);
-      });
-    }
-  }
-
-  void _removeImage(int index) {
-    setState(() {
-      selectedImages.removeAt(index);
-    });
-  }
-
-  void _removeExistingImage(int index) {
-    setState(() {
-      existingImageUrls.removeAt(index);
-    });
-  }
-
   Widget _buildImagesGrid() {
+    THelperFunctions.isDarkMode(Get.context!);
+    
     if (isEditing && existingImageUrls.isNotEmpty && selectedImages.isEmpty) {
       return Column(
         children: [
@@ -518,23 +541,44 @@ class _AddProductFormState extends State<AddProductForm> {
   }
 
   Widget _buildImagePickerCard() {
+    final dark = THelperFunctions.isDarkMode(Get.context!);
+    
     return GestureDetector(
-      onTap: _addImage,
+      onTap: _pickImages,
       child: Container(
         height: 120,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey, width: 2, style: BorderStyle.solid),
+          color: dark ? TColors.darkerGrey : TColors.light,
           borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
-          color: THelperFunctions.isDarkMode(Get.context!) ? TColors.dark : TColors.light,
+          border: Border.all(
+            color: dark ? TColors.borderSecondary : TColors.borderPrimary,
+            width: 2,
+            style: BorderStyle.solid,
+          ),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Iconsax.gallery_add, size: 40),
-            SizedBox(height: TSizes.xs),
-            Text('Tap to add images'),
-            SizedBox(height: TSizes.xs),
-            Text('You can select multiple', style: TextStyle(fontSize: 12)),
+            Icon(
+              Iconsax.gallery_add,
+              size: 40,
+              color: dark ? TColors.grey : TColors.darkGrey,
+            ),
+            const SizedBox(height: TSizes.xs),
+            Text(
+              'Tap to add images',
+              style: TextStyle(
+                color: dark ? TColors.grey : TColors.darkGrey,
+              ),
+            ),
+            const SizedBox(height: TSizes.xs),
+            Text(
+              'You can select multiple',
+              style: TextStyle(
+                fontSize: 12,
+                color: dark ? TColors.grey : TColors.darkGrey,
+              ),
+            ),
           ],
         ),
       ),
@@ -542,17 +586,23 @@ class _AddProductFormState extends State<AddProductForm> {
   }
 
   Widget _buildAddMoreImagesButton() {
+    THelperFunctions.isDarkMode(Get.context!);
+    
     return OutlinedButton.icon(
-      onPressed: _addImage,
+      onPressed: _pickImages,
       icon: const Icon(Iconsax.add, size: 16),
       label: const Text('Add More Images'),
       style: OutlinedButton.styleFrom(
+        foregroundColor: TColors.primary,
+        side: const BorderSide(color: TColors.primary),
         padding: const EdgeInsets.symmetric(vertical: TSizes.sm),
       ),
     );
   }
 
   Widget _buildImageCard(int index) {
+    THelperFunctions.isDarkMode(Get.context!);
+    
     return Stack(
       children: [
         ClipRRect(
@@ -574,7 +624,7 @@ class _AddProductFormState extends State<AddProductForm> {
             ),
             child: IconButton(
               padding: EdgeInsets.zero,
-              icon: const Icon(Icons.close, size: 16, color: Colors.white),
+              icon: const Icon(Iconsax.trash, size: 14, color: Colors.white),
               onPressed: () => _removeImage(index),
               constraints: const BoxConstraints(
                 minWidth: 28,
@@ -603,6 +653,8 @@ class _AddProductFormState extends State<AddProductForm> {
   }
 
   Widget _buildExistingImageCard(int index) {
+    final dark = THelperFunctions.isDarkMode(Get.context!);
+    
     return Stack(
       children: [
         ClipRRect(
@@ -613,7 +665,7 @@ class _AddProductFormState extends State<AddProductForm> {
             width: double.infinity,
             height: double.infinity,
             errorBuilder: (_, __, ___) => Container(
-              color: Colors.grey[300],
+              color: dark ? TColors.darkerGrey : TColors.light,
               child: const Icon(Iconsax.image, size: 30),
             ),
           ),
@@ -628,7 +680,7 @@ class _AddProductFormState extends State<AddProductForm> {
             ),
             child: IconButton(
               padding: EdgeInsets.zero,
-              icon: const Icon(Icons.close, size: 16, color: Colors.white),
+              icon: const Icon(Iconsax.trash, size: 14, color: Colors.white),
               onPressed: () => _removeExistingImage(index),
               constraints: const BoxConstraints(
                 minWidth: 28,
@@ -656,22 +708,30 @@ class _AddProductFormState extends State<AddProductForm> {
     );
   }
 
-  Widget _buildThumbnailSelector() {
+  Widget _buildThumbnailPicker() {
+    final dark = THelperFunctions.isDarkMode(Get.context!);
+    
     return Container(
       padding: const EdgeInsets.all(TSizes.sm),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
+        color: dark ? TColors.dark : TColors.white,
         borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
+        border: Border.all(
+          color: dark ? TColors.borderSecondary : TColors.borderPrimary,
+        ),
       ),
       child: Row(
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
-              color: THelperFunctions.isDarkMode(Get.context!) ? TColors.dark : TColors.light,
+              color: dark ? TColors.darkerGrey : TColors.light,
               borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
-              border: Border.all(color: Colors.grey, width: 0.5),
+              border: Border.all(
+                color: dark ? TColors.borderSecondary : TColors.borderPrimary,
+                width: 0.5,
+              ),
             ),
             child: thumbnailImage != null
                 ? ClipRRect(
@@ -683,7 +743,7 @@ class _AddProductFormState extends State<AddProductForm> {
                         borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
                         child: Image.network(existingThumbnailUrl!, fit: BoxFit.cover),
                       )
-                    : const Icon(Iconsax.image, size: 30)),
+                    : Icon(Iconsax.image, size: 30, color: dark ? TColors.grey : TColors.darkGrey)),
           ),
           const SizedBox(width: TSizes.spaceBtwItems),
           Expanded(
@@ -691,33 +751,45 @@ class _AddProductFormState extends State<AddProductForm> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Thumbnail Image',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  'Product Thumbnail',
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: TSizes.xs),
                 Text(
                   thumbnailImage != null 
-                      ? 'New image selected' 
+                      ? 'New thumbnail selected' 
                       : (existingThumbnailUrl != null && existingThumbnailUrl!.isNotEmpty
                           ? 'Current thumbnail saved'
-                          : 'No image selected'),
+                          : 'No thumbnail selected'),
                   style: TextStyle(
                     fontSize: 12,
                     color: (thumbnailImage != null || (existingThumbnailUrl != null && existingThumbnailUrl!.isNotEmpty))
                         ? TColors.success 
-                        : Colors.grey,
+                        : (dark ? TColors.grey : TColors.darkGrey),
                   ),
                 ),
               ],
             ),
           ),
-          ElevatedButton.icon(
-            onPressed: _selectThumbnail,
-            icon: const Icon(Iconsax.camera, size: 16),
-            label: Text(thumbnailImage != null ? 'Change' : 'Select'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: TSizes.md, vertical: TSizes.xs),
-            ),
+          Row(
+            children: [
+              if (thumbnailImage != null || (existingThumbnailUrl != null && existingThumbnailUrl!.isNotEmpty))
+                IconButton(
+                  onPressed: _removeThumbnail,
+                  icon: Icon(Iconsax.trash, color: TColors.error),
+                  tooltip: 'Remove',
+                ),
+              ElevatedButton.icon(
+                onPressed: _pickThumbnail,
+                icon: const Icon(Iconsax.camera, size: 16),
+                label: Text(thumbnailImage != null ? 'Change' : 'Select'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: TColors.primary,
+                  foregroundColor: TColors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: TSizes.md, vertical: TSizes.xs),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -976,6 +1048,20 @@ class _AddProductFormState extends State<AddProductForm> {
                         variations[index].sku = value;
                       },
                     ),
+                    const SizedBox(height: TSizes.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {});
+                          Get.snackbar('Success', 'Variation updated', backgroundColor: TColors.success, colorText: Colors.white);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: TColors.primary,
+                        ),
+                        child: const Text('Update Variation'),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1173,7 +1259,7 @@ class _AddProductFormState extends State<AddProductForm> {
 
   void _generateVariations() {
     if (attributes.isEmpty) {
-      Get.snackbar('Error', 'Add attributes first', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Add attributes first', backgroundColor: TColors.error, colorText: Colors.white);
       return;
     }
 
@@ -1211,6 +1297,8 @@ class _AddProductFormState extends State<AddProductForm> {
 
   void _saveProduct() async {
     if (_formKey.currentState!.validate() && selectedBrand != null) {
+      setState(() => _isUploading = true);
+      
       // Upload new images to Cloudinary
       List<String> uploadedImageUrls = [];
       for (var img in selectedImages) {
@@ -1256,10 +1344,11 @@ class _AddProductFormState extends State<AddProductForm> {
         await controller.addProduct(product);
       }
 
+      setState(() => _isUploading = false);
       Get.back();
       Get.snackbar('Success', isEditing ? 'Product updated' : 'Product added', backgroundColor: TColors.success, colorText: Colors.white);
     } else {
-      Get.snackbar('Error', 'Please fill all required fields', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Error', 'Please fill all required fields', backgroundColor: TColors.error, colorText: Colors.white);
     }
   }
 

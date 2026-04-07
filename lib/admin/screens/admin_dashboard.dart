@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_controller.dart';
+import 'package:yt_ecommerce_admin_panel/admin/forms/add_banner_form.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
+import 'package:yt_ecommerce_admin_panel/admin/forms/add_product_form.dart';
+import 'package:yt_ecommerce_admin_panel/admin/forms/add_brand_form.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/enums.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
@@ -186,7 +189,9 @@ class AdminDashboard extends StatelessWidget {
                   context,
                   icon: Iconsax.add_square,
                   title: 'Add Product',
-                  onTap: () {},
+                  onTap: () {
+                    Get.to(() => const AddProductForm());
+                  },
                 ),
               ),
               const SizedBox(width: TSizes.spaceBtwItems),
@@ -195,7 +200,9 @@ class AdminDashboard extends StatelessWidget {
                   context,
                   icon: Iconsax.tag,
                   title: 'Add Brand',
-                  onTap: () {},
+                  onTap: () {
+                    Get.to(() => const AddBrandForm());
+                  },
                 ),
               ),
               const SizedBox(width: TSizes.spaceBtwItems),
@@ -204,7 +211,9 @@ class AdminDashboard extends StatelessWidget {
                   context,
                   icon: Iconsax.image,
                   title: 'Add Banner',
-                  onTap: () {},
+                  onTap: () {
+                    Get.to(() => const AddBannerForm());
+                  },
                 ),
               ),
             ],

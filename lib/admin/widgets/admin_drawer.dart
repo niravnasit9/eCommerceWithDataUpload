@@ -8,6 +8,7 @@ import 'package:yt_ecommerce_admin_panel/admin/screens/admin_banners.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_orders.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_users.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_navigation_menu.dart';
+import 'package:yt_ecommerce_admin_panel/features/personalization/screens/settings/widgets/theme_toggle.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/load_data/load_data.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
@@ -75,7 +76,8 @@ class AdminDrawer extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: TColors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(TSizes.borderRadiusLg),
+                      borderRadius:
+                          BorderRadius.circular(TSizes.borderRadiusLg),
                     ),
                     child: Text(
                       'Administrator',
@@ -168,10 +170,10 @@ class AdminDrawer extends StatelessWidget {
                     title: 'App Settings',
                     onTap: () {},
                   ),
-                  
+
                   /// Theme Toggle
-                  _buildThemeToggleItem(context),
-                  
+                  const ThemeToggle(),
+
                   const Divider(height: TSizes.spaceBtwSections),
 
                   /// Logout
@@ -212,58 +214,29 @@ class AdminDrawer extends StatelessWidget {
     bool isDestructive = false,
   }) {
     final dark = THelperFunctions.isDarkMode(context);
-    
+
     return ListTile(
       leading: Icon(
         icon,
-        color: isDestructive ? TColors.error : (dark ? TColors.white : TColors.black),
+        color: isDestructive
+            ? TColors.error
+            : (dark ? TColors.white : TColors.black),
         size: 22,
       ),
       title: Text(
         title,
         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: isDestructive 
-                  ? TColors.error 
+              color: isDestructive
+                  ? TColors.error
                   : (dark ? TColors.white : TColors.black),
             ),
       ),
       trailing: Icon(
-        Iconsax.arrow_right_3, 
+        Iconsax.arrow_right_3,
         size: 18,
         color: dark ? TColors.white : TColors.black,
       ),
       onTap: onTap,
-    );
-  }
-
-  Widget _buildThemeToggleItem(BuildContext context) {
-    final dark = THelperFunctions.isDarkMode(context);
-    
-    return ListTile(
-      leading: Icon(
-        dark ? Iconsax.moon : Iconsax.sun_1,
-        color: dark ? TColors.warning : TColors.primary,
-        size: 22,
-      ),
-      title: Text(
-        dark ? 'Dark Mode' : 'Light Mode',
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: dark ? TColors.white : TColors.black,
-            ),
-      ),
-      trailing: Switch(
-        value: dark,
-        onChanged: (value) {
-          if (value) {
-            Get.changeThemeMode(ThemeMode.dark);
-          } else {
-            Get.changeThemeMode(ThemeMode.light);
-          }
-        },
-        activeColor: TColors.primary,
-        inactiveThumbColor: TColors.white,
-        inactiveTrackColor: TColors.grey,
-      ),
     );
   }
 }

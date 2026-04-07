@@ -9,8 +9,8 @@ import 'package:yt_ecommerce_admin_panel/common/widgets/texts/section_heading.da
 import 'package:yt_ecommerce_admin_panel/data/repositories/authentication/authentication_repository.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/screens/address/address.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/screens/profile/profile.dart';
+import 'package:yt_ecommerce_admin_panel/features/personalization/screens/settings/widgets/theme_toggle.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/cart/cart.dart';
-// import 'package:yt_ecommerce_admin_panel/features/shop/screens/load_data/load_data.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/order/order.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
@@ -40,7 +40,9 @@ class SettingsScreen extends StatelessWidget {
                   ),
 
                   /// User Profile Card
-                  TUserProfileTile(onPressed: ()=> Get.to(()=>const ProfileScreen()),),
+                  TUserProfileTile(
+                    onPressed: () => Get.to(() => const ProfileScreen()),
+                  ),
                   const SizedBox(height: TSizes.spaceBtwSections),
                 ],
               ),
@@ -66,13 +68,13 @@ class SettingsScreen extends StatelessWidget {
                     icon: Iconsax.shopping_cart,
                     title: 'My Cart',
                     subTitle: 'Add, remove products and move to checkout',
-                    onTap: () =>Get.to(const CartScreen()),
+                    onTap: () => Get.to(const CartScreen()),
                   ),
                   TSettingsMenuTile(
                     icon: Iconsax.bank,
                     title: 'My Orders',
                     subTitle: 'In-progress and Completed Orders',
-                    onTap: () =>Get.to(const OrderScreen()),
+                    onTap: () => Get.to(const OrderScreen()),
                   ),
                   TSettingsMenuTile(
                     icon: Iconsax.bag_tick,
@@ -117,6 +119,9 @@ class SettingsScreen extends StatelessWidget {
                     title: 'Geo Location',
                     subTitle: 'Set Recommendations Based on Location',
                     trailing: Switch(
+                      activeColor: TColors.primary,
+                      inactiveThumbColor: TColors.white,
+                      inactiveTrackColor: TColors.grey,
                       value: true,
                       onChanged: (value) {},
                     ),
@@ -126,6 +131,9 @@ class SettingsScreen extends StatelessWidget {
                     title: 'Safe Mode',
                     subTitle: 'Search Result is Safe for All Ages',
                     trailing: Switch(
+                      activeColor: TColors.primary,
+                      inactiveThumbColor: TColors.white,
+                      inactiveTrackColor: TColors.grey,
                       value: false,
                       onChanged: (value) {},
                     ),
@@ -135,10 +143,15 @@ class SettingsScreen extends StatelessWidget {
                     title: 'HD Image Quality',
                     subTitle: 'Set Image Quality to be Seen',
                     trailing: Switch(
+                      activeColor: TColors.primary,
+                      inactiveThumbColor: TColors.white,
+                      inactiveTrackColor: TColors.grey,
                       value: false,
                       onChanged: (value) {},
                     ),
                   ),
+
+                  const ThemeToggle(),
 
                   ///  -- Logout Button
                   const SizedBox(height: TSizes.spaceBtwSections),
@@ -149,7 +162,7 @@ class SettingsScreen extends StatelessWidget {
                       child: const Text('Logout'),
                     ),
                   ),
-                  const SizedBox(height: TSizes.spaceBtwSections * 2.5 ),
+                  const SizedBox(height: TSizes.spaceBtwSections * 2.5),
                 ],
               ),
             ),
