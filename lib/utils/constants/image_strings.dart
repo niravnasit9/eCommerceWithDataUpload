@@ -194,7 +194,7 @@ class TImages {
   static const String visa = "assets/icons/payment_methods/visa.png";
   static const String paystack = "assets/icons/payment_methods/paystack.png";
   static const String paytm = "assets/icons/payment_methods/paytm.png";
-  static const String razorpay = "assets/icons/payment_methods/paytm.png";
+  static const String razorpay = "assets/icons/payment_methods/razorpay.png";
   static const String cod = "assets/icons/payment_methods/cod.png";
   static const String successfulPaymentIcon = "assets/icons/payment_methods/successful_payment_icon.png";
 }

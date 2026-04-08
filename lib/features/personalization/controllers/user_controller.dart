@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/authentication/authentication_repository.dart';
+import 'package:yt_ecommerce_admin_panel/data/repositories/cloudinary/cloudinary_repository.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/user/user_repository.dart';
 import 'package:yt_ecommerce_admin_panel/features/authentication/screens/login/login.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/models/user_model.dart';
@@ -24,6 +26,7 @@ class UserController extends GetxController {
   final verifyEmail = TextEditingController();
   final verifyPassword = TextEditingController();
   final userRepository = Get.put(UserRepository());
+  final cloudinaryRepository = Get.put(CloudinaryRepository());
   final GlobalKey<FormState> reAuthFormKey = GlobalKey<FormState>();
 
   @override
@@ -48,7 +51,6 @@ class UserController extends GetxController {
   /// Save user Record from any Registration provider
   Future<void> saveUserRecord(UserCredential? userCredentials) async {
     try {
-      /// Refresh User Record
       await fetchUserRecord();
       if (user.value.id.isEmpty) {
         if (userCredentials != null) {
@@ -57,7 +59,6 @@ class UserController extends GetxController {
           final username = UserModel.generateUsername(
               userCredentials.user!.displayName ?? '');
 
-          /// Map data
           final user = UserModel(
             id: userCredentials.user!.uid,
             firstName: nameParts[0],
@@ -69,7 +70,6 @@ class UserController extends GetxController {
             profilePicture: userCredentials.user!.photoURL ?? '',
           );
 
-          /// Save user data
           await userRepository.saveUserRecord(user);
         }
       }
@@ -109,12 +109,10 @@ class UserController extends GetxController {
     try {
       TFullScreenLoader.openLoadingDialog('Processing', TImages.docerAnimation);
 
-      /// First re-Authenticate user
       final auth = AuthenticationRepository.instance;
       final provider =
           auth.authUser!.providerData.map((e) => e.providerId).first;
       if (provider.isNotEmpty) {
-        // Re Verify Auth Email
         if (provider == 'google.com') {
           await auth.signInWithGoogle();
           await auth.deleteAccount();
@@ -136,7 +134,6 @@ class UserController extends GetxController {
     try {
       TFullScreenLoader.openLoadingDialog('Processing', TImages.docerAnimation);
 
-      // Check Internet
       final isConnected = await NetworkManager.instance.isConnected();
       if (!isConnected) {
         TFullScreenLoader.stopLoading();
@@ -159,34 +156,52 @@ class UserController extends GetxController {
     }
   }
 
-  /// Upload Profile Image
-  uploadUserProfilePicture() async {
+  /// ✅ Upload Profile Image to Cloudinary
+  Future<void> uploadUserProfilePicture() async {
     try {
       final image = await ImagePicker().pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 100,
-          maxWidth: 800,
-          maxHeight: 800);
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 500,
+        maxHeight: 500,
+      );
+      
       if (image != null) {
         imageUploading.value = true;
-        // Upload Image
-        final imageUrl =
-            await userRepository.uploadImage('Users/Images/Profile/', image);
+        TFullScreenLoader.openLoadingDialog('Uploading...', TImages.docerAnimation);
 
-        // Update User Image Record
-        Map<String, dynamic> json = {'ProfilePicture': imageUrl};
-        await userRepository.updateSingleField(json);
-
-        user.value.profilePicture = imageUrl;
-        user.refresh();
-        TLoaders.successSnackBar(
-            title: 'Congratulations.',
-            message: 'Your Profile Image has been Updated!');
+        // Upload to Cloudinary
+        final imageUrl = await cloudinaryRepository.uploadUserImage(File(image.path));
+        
+        if (imageUrl != null && imageUrl.isNotEmpty) {
+          // Update user record with Cloudinary URL
+          Map<String, dynamic> json = {'ProfilePicture': imageUrl};
+          await userRepository.updateSingleField(json);
+          
+          // Update local user object
+          user.value.profilePicture = imageUrl;
+          user.refresh();
+          
+          TFullScreenLoader.stopLoading();
+          TLoaders.successSnackBar(
+            title: 'Success!',
+            message: 'Your profile picture has been updated!',
+          );
+        } else {
+          TFullScreenLoader.stopLoading();
+          TLoaders.errorSnackBar(
+            title: 'Upload Failed',
+            message: 'Failed to upload image. Please try again.',
+          );
+        }
       }
     } catch (e) {
+      TFullScreenLoader.stopLoading();
       TLoaders.errorSnackBar(
-          title: 'Oh Snap!', message: 'Something Went Wrong:$e');
-    }finally{
+        title: 'Error',
+        message: 'Something went wrong: $e',
+      );
+    } finally {
       imageUploading.value = false;
     }
   }
