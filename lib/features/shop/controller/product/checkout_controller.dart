@@ -15,7 +15,7 @@ class CheckoutController extends GetxController {
   @override
   void onInit() {
     selectedPaymentMethod.value =
-        PaymentMethodModel(name: 'Razorpay', image: TImages.paytm); // use any icon
+        PaymentMethodModel(name: 'Razorpay', image: TImages.razorpay); // use any icon
     super.onInit();
   }
 
@@ -38,7 +38,7 @@ class CheckoutController extends GetxController {
               TPaymetTile(
                 paymentMethod: PaymentMethodModel(
                   name: 'Razorpay',
-                  image: TImages.paytm,
+                  image: TImages.razorpay,
                 ),
               ),
 
@@ -48,7 +48,7 @@ class CheckoutController extends GetxController {
               TPaymetTile(
                 paymentMethod: PaymentMethodModel(
                   name: 'Cash on Delivery',
-                  image: TImages.googlePay, // add this image
+                  image: TImages.cod, // add this image
                 ),
               ),
 
