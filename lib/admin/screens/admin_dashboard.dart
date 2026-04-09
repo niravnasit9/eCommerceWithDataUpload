@@ -3,9 +3,10 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_controller.dart';
 import 'package:yt_ecommerce_admin_panel/admin/forms/add_banner_form.dart';
-import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
-import 'package:yt_ecommerce_admin_panel/admin/forms/add_product_form.dart';
 import 'package:yt_ecommerce_admin_panel/admin/forms/add_brand_form.dart';
+import 'package:yt_ecommerce_admin_panel/admin/forms/add_product_form.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_quick_action_card.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/enums.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
@@ -52,33 +53,28 @@ class AdminDashboard extends StatelessWidget {
               crossAxisSpacing: TSizes.spaceBtwItems,
               childAspectRatio: 1.2,
               children: [
-                AdminStatsCard(
+                AdminStatCard(
                   title: 'Total Products',
                   value: controller.totalProducts.value.toString(),
                   icon: Iconsax.shop,
-                  color: TColors.primary,
-                  change: controller.productGrowth.value,
                 ),
-                AdminStatsCard(
+                AdminStatCard(
                   title: 'Total Orders',
                   value: controller.totalOrders.value.toString(),
                   icon: Iconsax.shopping_cart,
                   color: TColors.success,
-                  change: controller.orderGrowth.value,
                 ),
-                AdminStatsCard(
+                AdminStatCard(
                   title: 'Total Users',
                   value: controller.totalUsers.value.toString(),
                   icon: Iconsax.user,
                   color: TColors.info,
-                  change: controller.userGrowth.value,
                 ),
-                AdminStatsCard(
+                AdminStatCard(
                   title: 'Total Revenue',
                   value: '₹${controller.totalRevenue.value.toStringAsFixed(0)}',
                   icon: Iconsax.money,
                   color: TColors.warning,
-                  change: controller.revenueGrowth.value,
                 ),
               ],
             );
@@ -95,9 +91,7 @@ class AdminDashboard extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               TextButton(
-                onPressed: () {
-                  // Navigate to orders screen
-                },
+                onPressed: () {},
                 child: const Text('View All'),
               ),
             ],
@@ -185,75 +179,31 @@ class AdminDashboard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _buildQuickActionCard(
-                  context,
+                child: AdminQuickActionCard(
                   icon: Iconsax.add_square,
                   title: 'Add Product',
-                  onTap: () {
-                    Get.to(() => const AddProductForm());
-                  },
+                  onTap: () => Get.to(() => const AddProductForm()),
                 ),
               ),
               const SizedBox(width: TSizes.spaceBtwItems),
               Expanded(
-                child: _buildQuickActionCard(
-                  context,
+                child: AdminQuickActionCard(
                   icon: Iconsax.tag,
                   title: 'Add Brand',
-                  onTap: () {
-                    Get.to(() => const AddBrandForm());
-                  },
+                  onTap: () => Get.to(() => const AddBrandForm()),
                 ),
               ),
               const SizedBox(width: TSizes.spaceBtwItems),
               Expanded(
-                child: _buildQuickActionCard(
-                  context,
+                child: AdminQuickActionCard(
                   icon: Iconsax.image,
                   title: 'Add Banner',
-                  onTap: () {
-                    Get.to(() => const AddBannerForm());
-                  },
+                  onTap: () => Get.to(() => const AddBannerForm()),
                 ),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    final dark = THelperFunctions.isDarkMode(context);
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(TSizes.borderRadiusLg),
-      child: Container(
-        padding: const EdgeInsets.all(TSizes.md),
-        decoration: BoxDecoration(
-          color: dark ? TColors.dark : TColors.white,
-          borderRadius: BorderRadius.circular(TSizes.borderRadiusLg),
-          border: Border.all(
-            color: dark ? TColors.borderSecondary : TColors.borderPrimary,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 32, color: TColors.primary),
-            const SizedBox(height: TSizes.sm),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.labelMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
       ),
     );
   }

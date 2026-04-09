@@ -4,24 +4,23 @@ import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_banner_controller.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_search_bar.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_banner_card.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_empty_state.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_delete_confirmation.dart';
 import 'package:yt_ecommerce_admin_panel/admin/forms/add_banner_form.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
-import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 
 class AdminBanners extends StatelessWidget {
   const AdminBanners({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final dark = THelperFunctions.isDarkMode(context);
     final controller = Get.put(AdminBannerController());
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Get.to(() => const AddBannerForm());
-        },
+        onPressed: () => Get.to(() => const AddBannerForm()),
         backgroundColor: TColors.primary,
         icon: const Icon(Iconsax.add),
         label: const Text('Add Banner'),
@@ -33,9 +32,7 @@ class AdminBanners extends StatelessWidget {
             /// Search Bar
             AdminSearchBar(
               hintText: 'Search banners...',
-              onChanged: (value) {
-                controller.searchBanners(value);
-              },
+              onChanged: controller.searchBanners,
             ),
             const SizedBox(height: TSizes.spaceBtwSections),
 
@@ -43,8 +40,7 @@ class AdminBanners extends StatelessWidget {
             Obx(() => Row(
               children: [
                 Expanded(
-                  child: _buildStatCard(
-                    context,
+                  child: AdminStatCard(
                     title: 'Total Banners',
                     value: controller.totalBanners.value.toString(),
                     icon: Iconsax.image,
@@ -52,8 +48,7 @@ class AdminBanners extends StatelessWidget {
                 ),
                 const SizedBox(width: TSizes.spaceBtwItems),
                 Expanded(
-                  child: _buildStatCard(
-                    context,
+                  child: AdminStatCard(
                     title: 'Active',
                     value: controller.activeBanners.value.toString(),
                     icon: Iconsax.tick_circle,
@@ -73,27 +68,12 @@ class AdminBanners extends StatelessWidget {
                 }
 
                 if (controller.filteredBanners.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Iconsax.image,
-                          size: 64,
-                          color: dark ? TColors.grey : TColors.darkGrey,
-                        ),
-                        const SizedBox(height: TSizes.spaceBtwItems),
-                        Text(
-                          'No banners found',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: TSizes.spaceBtwItems / 2),
-                        Text(
-                          'Click the + button to add your first banner',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
+                  return AdminEmptyState(
+                    icon: Iconsax.image,
+                    title: 'No banners found',
+                    subtitle: 'Click the + button to add your first banner',
+                    onActionPressed: () => Get.to(() => const AddBannerForm()),
+                    actionText: 'Add Banner',
                   );
                 }
 
@@ -104,15 +84,14 @@ class AdminBanners extends StatelessWidget {
                     final banner = controller.filteredBanners[index];
                     return AdminBannerCard(
                       banner: banner,
-                      onEdit: () {
-                        Get.to(() => AddBannerForm(banner: banner));
-                      },
-                      onDelete: () {
-                        _showDeleteConfirmation(context, controller, banner.id);
-                      },
-                      onToggleStatus: () {
-                        controller.toggleBannerStatus(banner.id);
-                      },
+                      onEdit: () => Get.to(() => AddBannerForm(banner: banner)),
+                      onDelete: () => AdminDeleteConfirmation.show(
+                        context: context,
+                        title: 'Delete Banner',
+                        message: 'Are you sure you want to delete this banner? This action cannot be undone.',
+                        onConfirm: () => controller.deleteBanner(banner.id),
+                      ),
+                      onToggleStatus: () => controller.toggleBannerStatus(banner.id),
                     );
                   },
                 );
@@ -121,72 +100,6 @@ class AdminBanners extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    Color color = TColors.primary,
-  }) {
-    final dark = THelperFunctions.isDarkMode(context);
-
-    return Container(
-      padding: const EdgeInsets.all(TSizes.sm),
-      decoration: BoxDecoration(
-        color: dark ? TColors.dark : TColors.white,
-        borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
-        border: Border.all(
-          color: dark ? TColors.borderSecondary : TColors.borderPrimary,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: TSizes.xs),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, AdminBannerController controller, String bannerId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Banner'),
-          content: const Text('Are you sure you want to delete this banner? This action cannot be undone.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                controller.deleteBanner(bannerId);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: TColors.error,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

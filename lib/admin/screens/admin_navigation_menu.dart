@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_dashboard.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_products.dart';
@@ -8,7 +7,6 @@ import 'package:yt_ecommerce_admin_panel/admin/screens/admin_banners.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_orders.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_users.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_drawer.dart';
-// import 'package:yt_ecommerce_admin_panel/features/shop/screens/load_data/load_data.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 
@@ -62,7 +60,7 @@ class _AdminNavigationMenuState extends State<AdminNavigationMenu> {
         leading: IconButton(
           icon: Icon(
             Iconsax.menu,
-            color: dark ? TColors.white : TColors.black, // ✅ Fix icon color for dark mode
+            color: dark ? TColors.white : TColors.black,
             size: 24,
           ),
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
@@ -80,31 +78,15 @@ class _AdminNavigationMenuState extends State<AdminNavigationMenu> {
               Iconsax.refresh,
               color: dark ? TColors.white : TColors.black,
             ),
-            onPressed: () {
-              setState(() {});
-            },
+            onPressed: () => setState(() {}),
           ),
-          // IconButton(
-          //   icon: Icon(
-          //     Iconsax.data,
-          //     color: dark ? TColors.white : TColors.black,
-          //   ),
-          //   onPressed: () {
-          //     Get.to(() => const LoadData());
-          //   },
-          //   tooltip: 'Upload Data',
-          // ),
         ],
       ),
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _selectedIndex = index),
         selectedItemColor: TColors.primary,
         unselectedItemColor: dark ? TColors.grey : TColors.darkGrey,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),

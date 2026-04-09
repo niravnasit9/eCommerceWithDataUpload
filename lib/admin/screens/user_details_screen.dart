@@ -4,9 +4,10 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_user_controller.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_delete_confirmation.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_info_row.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/order/order_details.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/order_model.dart';
-// import 'package:yt_ecommerce_admin_panel/features/shop/screens/order/order.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/enums.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
@@ -33,9 +34,7 @@ class UserDetailsScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              // Edit user
-            },
+            onPressed: () {},
             icon: const Icon(Iconsax.edit),
           ),
         ],
@@ -121,44 +120,39 @@ class UserDetailsScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildInfoRow(
-                    context,
-                    'Email Address',
-                    userData['email'] ?? 'Not provided',
-                    Iconsax.sms,
-                    dark,
+                  AdminInfoRow(
+                    label: 'Email Address',
+                    value: userData['email'] ?? 'Not provided',
+                    icon: Iconsax.sms,
+                    dark: dark,
                   ),
                   const SizedBox(height: TSizes.spaceBtwItems),
-                  _buildInfoRow(
-                    context,
-                    'Phone Number',
-                    userData['phoneNumber'] ?? 'Not provided',
-                    Iconsax.call,
-                    dark,
+                  AdminInfoRow(
+                    label: 'Phone Number',
+                    value: userData['phoneNumber'] ?? 'Not provided',
+                    icon: Iconsax.call,
+                    dark: dark,
                   ),
                   const SizedBox(height: TSizes.spaceBtwItems),
-                  _buildInfoRow(
-                    context,
-                    'User ID',
-                    userData['id'] ?? 'Unknown',
-                    Iconsax.tag,
-                    dark,
+                  AdminInfoRow(
+                    label: 'User ID',
+                    value: userData['id'] ?? 'Unknown',
+                    icon: Iconsax.tag,
+                    dark: dark,
                   ),
                   const SizedBox(height: TSizes.spaceBtwItems),
-                  _buildInfoRow(
-                    context,
-                    'Joined Date',
-                    _formatDate(userData['createdAt']),
-                    Iconsax.calendar,
-                    dark,
+                  AdminInfoRow(
+                    label: 'Joined Date',
+                    value: _formatDate(userData['createdAt']),
+                    icon: Iconsax.calendar,
+                    dark: dark,
                   ),
                   const SizedBox(height: TSizes.spaceBtwItems),
-                  _buildInfoRow(
-                    context,
-                    'Last Login',
-                    _formatDate(userData['lastLogin']),
-                    Iconsax.clock,
-                    dark,
+                  AdminInfoRow(
+                    label: 'Last Login',
+                    value: _formatDate(userData['lastLogin']),
+                    icon: Iconsax.clock,
+                    dark: dark,
                   ),
                 ],
               ),
@@ -186,7 +180,6 @@ class UserDetailsScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  /// ✅ View Orders - Now Functional
                   ListTile(
                     leading: const Icon(Iconsax.shopping_cart),
                     title: const Text('View Orders'),
@@ -280,8 +273,6 @@ class UserDetailsScreen extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: TSizes.spaceBtwItems),
-                  
-                  /// ✅ Delete User Account - Now Functional
                   ListTile(
                     leading: const Icon(Iconsax.trash, color: TColors.error),
                     title: const Text('Delete User Account'),
@@ -298,46 +289,6 @@ class UserDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    bool dark,
-  ) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: TSizes.iconSm,
-          color: dark ? TColors.textWhite : TColors.textSecondary,
-        ),
-        const SizedBox(width: TSizes.spaceBtwItems / 2),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: dark ? TColors.textWhite : TColors.textSecondary,
-                    ),
-              ),
-              const SizedBox(height: TSizes.xs),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: dark ? TColors.textWhite : TColors.textPrimary,
-                    ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   String _formatDate(dynamic date) {
     if (date == null) return 'Never';
     if (date is Timestamp) {
@@ -349,31 +300,20 @@ class UserDetailsScreen extends StatelessWidget {
     return 'Invalid date';
   }
 
-  /// ✅ Navigate to User Orders
   void _navigateToUserOrders(BuildContext context, String userId) {
     if (userId.isEmpty) {
-      TLoaders.warningSnackBar(
-        title: 'Error',
-        message: 'User ID not found',
-      );
+      TLoaders.warningSnackBar(title: 'Error', message: 'User ID not found');
       return;
     }
-    
-    // Navigate to orders screen filtered by user
     Get.to(() => UserOrdersScreen(userId: userId));
   }
 
-  /// ✅ Send Email to User
   void _sendEmailToUser(BuildContext context, String? email) {
     if (email == null || email.isEmpty) {
-      TLoaders.warningSnackBar(
-        title: 'Error',
-        message: 'User email not found',
-      );
+      TLoaders.warningSnackBar(title: 'Error', message: 'User email not found');
       return;
     }
     
-    // Show email dialog
     final emailController = TextEditingController();
     final subjectController = TextEditingController();
     
@@ -402,18 +342,11 @@ class UserDetailsScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
-              // TODO: Implement email sending logic
               Get.back();
-              TLoaders.successSnackBar(
-                title: 'Email Sent',
-                message: 'Email sent to $email',
-              );
+              TLoaders.successSnackBar(title: 'Email Sent', message: 'Email sent to $email');
             },
             child: const Text('Send'),
           ),
@@ -422,63 +355,28 @@ class UserDetailsScreen extends StatelessWidget {
     );
   }
 
-  /// ✅ Show Delete User Confirmation
   void _showDeleteUserConfirmation(BuildContext context, AdminUserController controller, String userId) {
-    showDialog(
+    AdminDeleteConfirmation.show(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete User Account'),
-          content: const Text(
-            'Are you sure you want to delete this user account? '
-            'This action cannot be undone. All user data including orders, '
-            'addresses, and personal information will be permanently removed.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                
-                // Show loading
-                Get.dialog(
-                  const Center(child: CircularProgressIndicator()),
-                  barrierDismissible: false,
-                );
-                
-                try {
-                  await controller.deleteUserAccount(userId);
-                  Get.back(); // Close loading
-                  Get.back(); // Close user details screen
-                  
-                  TLoaders.successSnackBar(
-                    title: 'Success',
-                    message: 'User account deleted successfully',
-                  );
-                } catch (e) {
-                  Get.back(); // Close loading
-                  TLoaders.errorSnackBar(
-                    title: 'Error',
-                    message: 'Failed to delete user account: $e',
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
+      title: 'Delete User Account',
+      message: 'Are you sure you want to delete this user account? This action cannot be undone.',
+      onConfirm: () async {
+        Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+        try {
+          await controller.deleteUserAccount(userId);
+          Get.back();
+          Get.back();
+          TLoaders.successSnackBar(title: 'Success', message: 'User account deleted successfully');
+        } catch (e) {
+          Get.back();
+          TLoaders.errorSnackBar(title: 'Error', message: 'Failed to delete user account: $e');
+        }
       },
     );
   }
 }
 
-/// ✅ User Orders Screen - Shows orders for a specific user
+/// User Orders Screen
 class UserOrdersScreen extends StatelessWidget {
   const UserOrdersScreen({super.key, required this.userId});
 
@@ -660,9 +558,7 @@ class UserOrdersScreen extends StatelessWidget {
               ),
               const Spacer(),
               TextButton(
-                onPressed: () {
-                  Get.to(() => OrderDetailsScreen(order: order));
-                },
+                onPressed: () => Get.to(() => OrderDetailsScreen(order: order)),
                 child: const Text('View Details'),
               ),
             ],

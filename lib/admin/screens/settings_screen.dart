@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:yt_ecommerce_admin_panel/features/personalization/screens/settings/widgets/theme_toggle.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
@@ -41,16 +42,7 @@ class AdminSettingsScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  SwitchListTile(
-                    title: const Text('Dark Mode'),
-                    subtitle: const Text('Switch between light and dark theme'),
-                    secondary: const Icon(Iconsax.moon),
-                    value: dark,
-                    onChanged: (value) {
-                      THelperFunctions.toggleTheme();
-                    },
-                    activeColor: TColors.primary,
-                  ),
+                  const ThemeToggle(),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Iconsax.notification),

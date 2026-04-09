@@ -5,6 +5,8 @@ import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_user_controller.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/user_details_screen.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_search_bar.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_empty_state.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
@@ -25,9 +27,7 @@ class AdminUsers extends StatelessWidget {
             /// Search Bar
             AdminSearchBar(
               hintText: 'Search users...',
-              onChanged: (value) {
-                controller.searchUsers(value);
-              },
+              onChanged: controller.searchUsers,
             ),
             const SizedBox(height: TSizes.spaceBtwSections),
 
@@ -35,17 +35,16 @@ class AdminUsers extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatCard(
-                    context,
+                  child: AdminStatCard(
                     title: 'Total Users',
                     value: controller.totalUsers.value.toString(),
                     icon: Iconsax.user,
+                    color: TColors.primary,
                   ),
                 ),
                 const SizedBox(width: TSizes.spaceBtwItems),
                 Expanded(
-                  child: _buildStatCard(
-                    context,
+                  child: AdminStatCard(
                     title: 'Active Today',
                     value: controller.activeUsersToday.value.toString(),
                     icon: Iconsax.activity,
@@ -54,8 +53,7 @@ class AdminUsers extends StatelessWidget {
                 ),
                 const SizedBox(width: TSizes.spaceBtwItems),
                 Expanded(
-                  child: _buildStatCard(
-                    context,
+                  child: AdminStatCard(
                     title: 'New This Week',
                     value: controller.newUsersThisWeek.value.toString(),
                     icon: Iconsax.profile_add,
@@ -75,22 +73,10 @@ class AdminUsers extends StatelessWidget {
                 }
 
                 if (controller.filteredUsers.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Iconsax.user,
-                          size: 64,
-                          color: dark ? TColors.grey : TColors.darkGrey,
-                        ),
-                        const SizedBox(height: TSizes.spaceBtwItems),
-                        Text(
-                          'No users found',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
+                  return AdminEmptyState(
+                    icon: Iconsax.user,
+                    title: 'No users found',
+                    subtitle: 'No users have registered yet',
                   );
                 }
 
@@ -110,44 +96,6 @@ class AdminUsers extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    Color color = TColors.primary,
-  }) {
-    final dark = THelperFunctions.isDarkMode(context);
-
-    return Container(
-      padding: const EdgeInsets.all(TSizes.sm),
-      decoration: BoxDecoration(
-        color: dark ? TColors.dark : TColors.white,
-        borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
-        border: Border.all(
-          color: dark ? TColors.borderSecondary : TColors.borderPrimary,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: TSizes.xs),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildUserCard(BuildContext context, Map<String, dynamic> user, bool dark) {
     final email = user['email']?.toString() ?? user['Email']?.toString() ?? 'No email';
     final name = user['name']?.toString() ?? user['Name']?.toString() ?? email.split('@')[0];
@@ -155,9 +103,7 @@ class AdminUsers extends StatelessWidget {
     final isAdmin = user['isAdmin'] == true || user['IsAdmin'] == true;
 
     return GestureDetector(
-      onTap: () {
-        Get.to(() => UserDetailsScreen(userData: user));
-      },
+      onTap: () => Get.to(() => UserDetailsScreen(userData: user)),
       child: Container(
         padding: const EdgeInsets.all(TSizes.sm),
         decoration: BoxDecoration(
@@ -241,9 +187,7 @@ class AdminUsers extends StatelessWidget {
                   ),
                 const SizedBox(height: TSizes.sm),
                 IconButton(
-                  onPressed: () {
-                    Get.to(() => UserDetailsScreen(userData: user));
-                  },
+                  onPressed: () => Get.to(() => UserDetailsScreen(userData: user)),
                   icon: const Icon(Iconsax.arrow_right_3, size: 20),
                 ),
               ],

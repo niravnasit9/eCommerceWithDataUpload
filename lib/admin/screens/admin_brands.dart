@@ -4,6 +4,9 @@ import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_brand_controller.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_search_bar.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_brand_card.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_empty_state.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_delete_confirmation.dart';
 import 'package:yt_ecommerce_admin_panel/admin/forms/add_brand_form.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
@@ -14,14 +17,12 @@ class AdminBrands extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = THelperFunctions.isDarkMode(context);
+    THelperFunctions.isDarkMode(context);
     final controller = Get.put(AdminBrandController());
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Get.to(() => const AddBrandForm());
-        },
+        onPressed: () => Get.to(() => const AddBrandForm()),
         backgroundColor: TColors.primary,
         icon: const Icon(Iconsax.add),
         label: const Text('Add Brand'),
@@ -33,9 +34,7 @@ class AdminBrands extends StatelessWidget {
             /// Search Bar
             AdminSearchBar(
               hintText: 'Search brands...',
-              onChanged: (value) {
-                controller.searchBrands(value);
-              },
+              onChanged: controller.searchBrands,
             ),
             const SizedBox(height: TSizes.spaceBtwSections),
 
@@ -43,8 +42,7 @@ class AdminBrands extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatCard(
-                    context,
+                  child: AdminStatCard(
                     title: 'Total Brands',
                     value: controller.totalBrands.value.toString(),
                     icon: Iconsax.tag,
@@ -52,8 +50,7 @@ class AdminBrands extends StatelessWidget {
                 ),
                 const SizedBox(width: TSizes.spaceBtwItems),
                 Expanded(
-                  child: _buildStatCard(
-                    context,
+                  child: AdminStatCard(
                     title: 'Featured',
                     value: controller.featuredBrandsCount.value.toString(),
                     icon: Iconsax.star,
@@ -73,27 +70,12 @@ class AdminBrands extends StatelessWidget {
                 }
 
                 if (controller.filteredBrands.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Iconsax.tag,
-                          size: 64,
-                          color: dark ? TColors.grey : TColors.darkGrey,
-                        ),
-                        const SizedBox(height: TSizes.spaceBtwItems),
-                        Text(
-                          'No brands found',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: TSizes.spaceBtwItems / 2),
-                        Text(
-                          'Click the + button to add your first brand',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
+                  return AdminEmptyState(
+                    icon: Iconsax.tag,
+                    title: 'No brands found',
+                    subtitle: 'Click the + button to add your first brand',
+                    onActionPressed: () => Get.to(() => const AddBrandForm()),
+                    actionText: 'Add Brand',
                   );
                 }
 
@@ -109,12 +91,13 @@ class AdminBrands extends StatelessWidget {
                     final brand = controller.filteredBrands[index];
                     return AdminBrandCard(
                       brand: brand,
-                      onEdit: () {
-                        Get.to(() => AddBrandForm(brand: brand));
-                      },
-                      onDelete: () {
-                        _showDeleteConfirmation(context, controller, brand.id);
-                      },
+                      onEdit: () => Get.to(() => AddBrandForm(brand: brand)),
+                      onDelete: () => AdminDeleteConfirmation.show(
+                        context: context,
+                        title: 'Delete Brand',
+                        message: 'Are you sure you want to delete this brand? This action cannot be undone.',
+                        onConfirm: () => controller.deleteBrand(brand.id),
+                      ),
                     );
                   },
                 );
@@ -123,72 +106,6 @@ class AdminBrands extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    Color color = TColors.primary,
-  }) {
-    final dark = THelperFunctions.isDarkMode(context);
-
-    return Container(
-      padding: const EdgeInsets.all(TSizes.sm),
-      decoration: BoxDecoration(
-        color: dark ? TColors.dark : TColors.white,
-        borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
-        border: Border.all(
-          color: dark ? TColors.borderSecondary : TColors.borderPrimary,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: TSizes.xs),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, AdminBrandController controller, String brandId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Brand'),
-          content: const Text('Are you sure you want to delete this brand? This action cannot be undone.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                controller.deleteBrand(brandId);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: TColors.error,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
