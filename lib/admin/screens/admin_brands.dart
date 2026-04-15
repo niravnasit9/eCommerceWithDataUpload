@@ -95,7 +95,8 @@ class AdminBrands extends StatelessWidget {
                       onDelete: () => AdminDeleteConfirmation.show(
                         context: context,
                         title: 'Delete Brand',
-                        message: 'Are you sure you want to delete this brand? This action cannot be undone.',
+                        message:
+                            'Are you sure you want to delete this brand? This action cannot be undone.',
                         onConfirm: () => controller.deleteBrand(brand.id),
                       ),
                     );

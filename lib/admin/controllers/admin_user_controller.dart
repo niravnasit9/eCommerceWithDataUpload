@@ -1,16 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
+import 'package:yt_ecommerce_admin_panel/utils/popups/loaders.dart';
 
 class AdminUserController extends GetxController {
   static AdminUserController get instance => Get.find();
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  final isLoading = false.obs;
+  final isLoading = true.obs; // Start with true to show loader
   final RxList<Map<String, dynamic>> allUsers = <Map<String, dynamic>>[].obs;
-  final RxList<Map<String, dynamic>> filteredUsers =
-      <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> filteredUsers = <Map<String, dynamic>>[].obs;
 
   final totalUsers = 0.obs;
   final activeUsersToday = 0.obs;
@@ -19,7 +18,7 @@ class AdminUserController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchUsers();
+    fetchUsers(); // Fetch immediately on init
   }
 
   Future<void> fetchUsers() async {
@@ -28,7 +27,7 @@ class AdminUserController extends GetxController {
       print('👥 Fetching users...');
 
       final snapshot = await _db.collection('Users').get();
-
+      
       allUsers.value = snapshot.docs.map((doc) {
         final data = doc.data();
         return {
@@ -41,12 +40,12 @@ class AdminUserController extends GetxController {
           'isAdmin': data['isAdmin'] ?? data['IsAdmin'] ?? false,
         };
       }).toList();
-
+      
       filteredUsers.value = allUsers;
 
       // Calculate stats
       totalUsers.value = allUsers.length;
-
+      
       // Calculate active users today
       final today = DateTime.now();
       activeUsersToday.value = allUsers.where((user) {
@@ -80,6 +79,7 @@ class AdminUserController extends GetxController {
     } catch (e) {
       isLoading.value = false;
       print('❌ Error fetching users: $e');
+      TLoaders.errorSnackBar(title: 'Error', message: 'Failed to fetch users: $e');
     }
   }
 
@@ -103,60 +103,42 @@ class AdminUserController extends GetxController {
         'updatedAt': DateTime.now(),
       });
       await fetchUsers();
-      Get.snackbar(
-        'Success',
-        'User role updated successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: TColors.success,
-        colorText: TColors.white,
-      );
+      TLoaders.successSnackBar(title: 'Success', message: 'User role updated successfully');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to update user role: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: TColors.error,
-        colorText: TColors.white,
-      );
+      TLoaders.errorSnackBar(title: 'Error', message: 'Failed to update user role: $e');
     }
   }
 
-  /// Delete user account permanently
   Future<void> deleteUserAccount(String userId) async {
     try {
-      print('🗑️ Deleting user account: $userId');
-
       // Delete user's addresses
       final addressesSnapshot = await _db
           .collection('Users')
           .doc(userId)
           .collection('Addresses')
           .get();
-
+      
       for (var doc in addressesSnapshot.docs) {
         await doc.reference.delete();
       }
-
+      
       // Delete user's orders
-      final ordersSnapshot =
-          await _db.collection('Users').doc(userId).collection('Orders').get();
-
+      final ordersSnapshot = await _db
+          .collection('Users')
+          .doc(userId)
+          .collection('Orders')
+          .get();
+      
       for (var doc in ordersSnapshot.docs) {
         await doc.reference.delete();
       }
-
+      
       // Delete user document
       await _db.collection('Users').doc(userId).delete();
-
-      // Note: Firebase Auth user deletion would require admin SDK
-      // For now, we only delete Firestore data
-
-      print('✅ User account deleted successfully');
-
-      // Refresh user list
+      
       await fetchUsers();
+      TLoaders.successSnackBar(title: 'Success', message: 'User account deleted successfully');
     } catch (e) {
-      print('❌ Error deleting user: $e');
       throw 'Failed to delete user account: $e';
     }
   }

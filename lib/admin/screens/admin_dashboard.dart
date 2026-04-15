@@ -39,7 +39,7 @@ class AdminDashboard extends StatelessWidget {
           ),
           const SizedBox(height: TSizes.spaceBtwSections),
 
-          /// Stats Grid
+          /// Stats Grid with Trends
           Obx(() {
             if (controller.isLoading.value) {
               return const Center(child: CircularProgressIndicator());
@@ -57,24 +57,33 @@ class AdminDashboard extends StatelessWidget {
                   title: 'Total Products',
                   value: controller.totalProducts.value.toString(),
                   icon: Iconsax.shop,
+                  color: TColors.primary,
+                  trend: controller.productGrowth.value.startsWith('+'),
+                  trendValue: controller.productGrowth.value,
                 ),
                 AdminStatCard(
                   title: 'Total Orders',
                   value: controller.totalOrders.value.toString(),
                   icon: Iconsax.shopping_cart,
                   color: TColors.success,
+                  trend: controller.orderGrowth.value.startsWith('+'),
+                  trendValue: controller.orderGrowth.value,
                 ),
                 AdminStatCard(
                   title: 'Total Users',
                   value: controller.totalUsers.value.toString(),
                   icon: Iconsax.user,
                   color: TColors.info,
+                  trend: controller.userGrowth.value.startsWith('+'),
+                  trendValue: controller.userGrowth.value,
                 ),
                 AdminStatCard(
                   title: 'Total Revenue',
                   value: '₹${controller.totalRevenue.value.toStringAsFixed(0)}',
                   icon: Iconsax.money,
                   color: TColors.warning,
+                  trend: controller.revenueGrowth.value.startsWith('+'),
+                  trendValue: controller.revenueGrowth.value,
                 ),
               ],
             );
@@ -90,10 +99,10 @@ class AdminDashboard extends StatelessWidget {
                 'Recent Orders',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              TextButton(
-                onPressed: () {},
-                child: const Text('View All'),
-              ),
+              // TextButton(
+              //   onPressed: () {},
+              //   child: const Text('View All'),
+              // ),
             ],
           ),
           const SizedBox(height: TSizes.spaceBtwItems),
@@ -152,7 +161,8 @@ class AdminDashboard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: _getStatusColor(order.status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(TSizes.borderRadiusSm),
+                        borderRadius:
+                            BorderRadius.circular(TSizes.borderRadiusSm),
                       ),
                       child: Text(
                         order.orderStatusText,

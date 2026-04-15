@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_user_controller.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/user_details_screen.dart';
+import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_empty_state.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_search_bar.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
-import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_empty_state.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
@@ -31,37 +31,51 @@ class AdminUsers extends StatelessWidget {
             ),
             const SizedBox(height: TSizes.spaceBtwSections),
 
-            /// Stats Row
-            Row(
-              children: [
-                Expanded(
-                  child: AdminStatCard(
-                    title: 'Total Users',
-                    value: controller.totalUsers.value.toString(),
-                    icon: Iconsax.user,
-                    color: TColors.primary,
+            /// Stats Row - With loading state
+            Obx(() {
+              if (controller.isLoading.value) {
+                return Row(
+                  children: [
+                    Expanded(child: _buildShimmerCard()),
+                    const SizedBox(width: TSizes.spaceBtwItems),
+                    Expanded(child: _buildShimmerCard()),
+                    const SizedBox(width: TSizes.spaceBtwItems),
+                    Expanded(child: _buildShimmerCard()),
+                  ],
+                );
+              }
+              
+              return Row(
+                children: [
+                  Expanded(
+                    child: AdminStatCard(
+                      title: 'Total Users',
+                      value: controller.totalUsers.value.toString(),
+                      icon: Iconsax.user,
+                      color: TColors.primary,
+                    ),
                   ),
-                ),
-                const SizedBox(width: TSizes.spaceBtwItems),
-                Expanded(
-                  child: AdminStatCard(
-                    title: 'Active Today',
-                    value: controller.activeUsersToday.value.toString(),
-                    icon: Iconsax.activity,
-                    color: TColors.success,
+                  const SizedBox(width: TSizes.spaceBtwItems),
+                  Expanded(
+                    child: AdminStatCard(
+                      title: 'Active Today',
+                      value: controller.activeUsersToday.value.toString(),
+                      icon: Iconsax.activity,
+                      color: TColors.success,
+                    ),
                   ),
-                ),
-                const SizedBox(width: TSizes.spaceBtwItems),
-                Expanded(
-                  child: AdminStatCard(
-                    title: 'New This Week',
-                    value: controller.newUsersThisWeek.value.toString(),
-                    icon: Iconsax.profile_add,
-                    color: TColors.info,
+                  const SizedBox(width: TSizes.spaceBtwItems),
+                  Expanded(
+                    child: AdminStatCard(
+                      title: 'New This Week',
+                      value: controller.newUsersThisWeek.value.toString(),
+                      icon: Iconsax.profile_add,
+                      color: TColors.info,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              );
+            }),
 
             const SizedBox(height: TSizes.spaceBtwSections),
 
@@ -92,6 +106,37 @@ class AdminUsers extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerCard() {
+    return Container(
+      padding: const EdgeInsets.all(TSizes.sm),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(TSizes.borderRadiusMd),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            color: Colors.grey.withOpacity(0.2),
+          ),
+          const SizedBox(height: TSizes.xs),
+          Container(
+            width: 50,
+            height: 20,
+            color: Colors.grey.withOpacity(0.2),
+          ),
+          const SizedBox(height: TSizes.xs),
+          Container(
+            width: 70,
+            height: 15,
+            color: Colors.grey.withOpacity(0.2),
+          ),
+        ],
       ),
     );
   }

@@ -4,7 +4,7 @@ final List<BrandModel> dummyBrands = [
   BrandModel(
     id: 'brand_samsung',
     name: 'Samsung',
-    image: 'assets/icons/brands/samsung.png',
+    image: 'assets/icons/brands/samsung.png-56',
     isFeatured: true,
     productsCount: 3,
   ),
