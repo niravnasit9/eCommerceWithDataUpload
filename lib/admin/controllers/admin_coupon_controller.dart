@@ -1,0 +1,114 @@
+import 'package:get/get.dart';
+import 'package:yt_ecommerce_admin_panel/data/repositories/orders/coupon_repository.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/models/coupon_model.dart';
+import 'package:yt_ecommerce_admin_panel/utils/popups/loaders.dart';
+
+class AdminCouponController extends GetxController {
+  static AdminCouponController get instance => Get.find();
+
+  final CouponRepository _couponRepository = CouponRepository.instance;
+
+  final isLoading = false.obs;
+  final RxList<CouponModel> allCoupons = <CouponModel>[].obs;
+  final RxList<CouponModel> filteredCoupons = <CouponModel>[].obs;
+
+  final totalCoupons = 0.obs;
+  final activeCoupons = 0.obs;
+  final expiredCoupons = 0.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchCoupons();
+  }
+
+  Future<void> fetchCoupons() async {
+    try {
+      isLoading.value = true;
+      allCoupons.value = await _couponRepository.getAllCoupons();
+      filteredCoupons.value = allCoupons;
+
+      totalCoupons.value = allCoupons.length;
+      activeCoupons.value = allCoupons.where((c) => c.isActive && !c.isExpired).length;
+      expiredCoupons.value = allCoupons.where((c) => c.isExpired).length;
+
+      isLoading.value = false;
+    } catch (e) {
+      isLoading.value = false;
+      TLoaders.errorSnackBar(title: 'Error', message: 'Failed to fetch coupons: $e');
+    }
+  }
+
+  void searchCoupons(String query) {
+    if (query.isEmpty) {
+      filteredCoupons.value = allCoupons;
+    } else {
+      filteredCoupons.value = allCoupons.where((coupon) {
+        return coupon.code.toLowerCase().contains(query.toLowerCase()) ||
+            coupon.description.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    }
+  }
+
+  Future<void> addCoupon(CouponModel coupon) async {
+    try {
+      await _couponRepository.addCoupon(coupon);
+      await fetchCoupons();
+      TLoaders.successSnackBar(title: 'Success', message: 'Coupon added successfully');
+    } catch (e) {
+      TLoaders.errorSnackBar(title: 'Error', message: 'Failed to add coupon: $e');
+    }
+  }
+
+  Future<void> updateCoupon(CouponModel coupon) async {
+    try {
+      await _couponRepository.updateCoupon(coupon);
+      await fetchCoupons();
+      TLoaders.successSnackBar(title: 'Success', message: 'Coupon updated successfully');
+    } catch (e) {
+      TLoaders.errorSnackBar(title: 'Error', message: 'Failed to update coupon: $e');
+    }
+  }
+
+  Future<void> deleteCoupon(String couponId) async {
+    try {
+      await _couponRepository.deleteCoupon(couponId);
+      await fetchCoupons();
+      TLoaders.successSnackBar(title: 'Success', message: 'Coupon deleted successfully');
+    } catch (e) {
+      TLoaders.errorSnackBar(title: 'Error', message: 'Failed to delete coupon: $e');
+    }
+  }
+
+  Future<void> toggleCouponStatus(String couponId, bool isActive) async {
+    try {
+      final coupon = allCoupons.firstWhere((c) => c.id == couponId);
+      final updatedCoupon = CouponModel(
+        id: coupon.id,
+        code: coupon.code,
+        description: coupon.description,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+        minimumOrderAmount: coupon.minimumOrderAmount,
+        maximumDiscount: coupon.maximumDiscount,
+        validFrom: coupon.validFrom,
+        validTo: coupon.validTo,
+        usageLimit: coupon.usageLimit,
+        usedCount: coupon.usedCount,
+        isActive: isActive,
+        applicableProducts: coupon.applicableProducts,
+        applicableCategories: coupon.applicableCategories,
+        createdAt: coupon.createdAt,
+        updatedAt: DateTime.now(),
+      );
+      await _couponRepository.updateCoupon(updatedCoupon);
+      await fetchCoupons();
+      TLoaders.successSnackBar(
+        title: 'Success', 
+        message: isActive ? 'Coupon activated' : 'Coupon deactivated',
+      );
+    } catch (e) {
+      TLoaders.errorSnackBar(title: 'Error', message: 'Failed to update coupon status: $e');
+    }
+  }
+}

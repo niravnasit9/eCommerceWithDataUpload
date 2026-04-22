@@ -10,6 +10,7 @@ import 'package:yt_ecommerce_admin_panel/data/repositories/user/user_repository.
 import 'package:yt_ecommerce_admin_panel/features/authentication/screens/login/login.dart';
 import 'package:yt_ecommerce_admin_panel/features/authentication/screens/onBoarding/onboarding.dart';
 import 'package:yt_ecommerce_admin_panel/features/authentication/screens/signup/verify_email.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/cart_controller.dart';
 import 'package:yt_ecommerce_admin_panel/navigation_menu.dart';
 import 'package:yt_ecommerce_admin_panel/utils/exceptions/firebase_auth_exceptions.dart';
 import 'package:yt_ecommerce_admin_panel/utils/exceptions/firebase_exceptions.dart';
@@ -32,8 +33,8 @@ class AuthenticationRepository extends GetxController {
     screenRedirect();
   }
 
+// Update the screenRedirect method
   screenRedirect() async {
-    /// 🔥 Check admin first
     final isAdmin = deviceStorage.read("isAdmin") ?? false;
 
     if (isAdmin) {
@@ -45,7 +46,15 @@ class AuthenticationRepository extends GetxController {
 
     if (user != null) {
       if (user.emailVerified) {
-        await TLocalStorage.init(user.uid);
+        // ✅ Initialize storage for logged-in user AFTER login
+        await TLocalStorage.instance.initializeForUser(user.uid);
+
+        // ✅ Reload cart for this user
+        if (Get.isRegistered<CartController>()) {
+          final cartController = Get.find<CartController>();
+          cartController.loadCartItems();
+        }
+
         Get.offAll(() => const NavigationMenu());
       } else {
         Get.offAll(() => VerifyEmailScreen(email: user.email));
@@ -59,23 +68,30 @@ class AuthenticationRepository extends GetxController {
     }
   }
 
-  /// [EmailAuthentication] Login
+// Update login method to reload cart
   Future<UserCredential?> loginWithEmailAndPassword(
       String email, String password) async {
     try {
-      /// 🔥 ADMIN LOGIN (WITHOUT FIREBASE)
       if (email.trim() == "admin@gmail.com" && password.trim() == "123456") {
-        /// ✅ SAVE ADMIN SESSION
         deviceStorage.write("isAdmin", true);
-
-        /// 👉 OPEN ADMIN PANEL
         Get.offAll(() => const AdminNavigationMenu());
         return null;
       }
 
-      /// 🔥 NORMAL USER LOGIN (FIREBASE)
       final userCredential = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
+
+      // ✅ Initialize storage for user after login
+      if (userCredential.user != null) {
+        await TLocalStorage.instance
+            .initializeForUser(userCredential.user!.uid);
+
+        // ✅ Reload cart for this user
+        if (Get.isRegistered<CartController>()) {
+          final cartController = Get.find<CartController>();
+          cartController.loadCartItems();
+        }
+      }
 
       return userCredential;
     } on FirebaseAuthException catch (e) {

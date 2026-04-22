@@ -1,40 +1,82 @@
 import 'package:get_storage/get_storage.dart';
 
 class TLocalStorage {
+  static final TLocalStorage _instance = TLocalStorage._internal();
   late final GetStorage _storage;
-
-  static TLocalStorage? _instance;
-
+  bool _isInitialized = false;
+  String _currentUserId = '';
+  
   TLocalStorage._internal();
-
-  factory TLocalStorage.instance() {
-    _instance ??= TLocalStorage._internal();
-    return _instance!;
+  
+  static TLocalStorage get instance {
+    return _instance;
   }
-
-  static Future<void> init(String bucketName) async {
-    await GetStorage.init(bucketName);
-    _instance = TLocalStorage._internal();
-    _instance!._storage = GetStorage(bucketName);
+  
+  /// Initialize with default storage
+  Future<void> initialize() async {
+    if (!_isInitialized) {
+      await GetStorage.init();
+      _storage = GetStorage();
+      _isInitialized = true;
+      print('✅ TLocalStorage initialized successfully');
+    }
   }
-
-  // Generic method to save data
-  void writeData<T>(String key, T value) async {
-    await _storage.write(key, value);
+  
+  /// Initialize with user-specific storage (for cart persistence per user)
+  Future<void> initializeForUser(String userId) async {
+    await initialize();
+    _currentUserId = userId;
+    print('✅ TLocalStorage initialized for user: $userId');
   }
-
-  // Generic method to read data
-  T? readData<T>(String key) {
-    return _storage.read<T>(key);
+  
+  bool get isInitialized => _isInitialized;
+  
+  /// Get user-specific key
+  String _getUserKey(String key) {
+    if (_currentUserId.isNotEmpty) {
+      return '${_currentUserId}_$key';
+    }
+    return key;
   }
-
-  // Generic method to remove data
-  Future<void> removeData(String key) async {
-    await _storage.remove(key);
+  
+  void writeData(String key, dynamic value) {
+    if (!_isInitialized) {
+      print('⚠️ Storage not initialized, cannot write: $key');
+      return;
+    }
+    final userKey = _getUserKey(key);
+    _storage.write(userKey, value);
+    print('💾 Data saved: $userKey -> ${value is List ? '${value.length} items' : value}');
   }
-
-  // Clear all data in storage
-  Future<void> clearAll() async {
-    await _storage.erase();
+  
+  dynamic readData(String key) {
+    if (!_isInitialized) {
+      print('⚠️ Storage not initialized, cannot read: $key');
+      return null;
+    }
+    final userKey = _getUserKey(key);
+    final value = _storage.read(userKey);
+    print('📖 Data read: $userKey -> ${value != null ? (value is List ? '${value.length} items' : 'found') : 'not found'}');
+    return value;
+  }
+  
+  void removeData(String key) {
+    if (!_isInitialized) return;
+    final userKey = _getUserKey(key);
+    _storage.remove(userKey);
+    print('🗑️ Data removed: $userKey');
+  }
+  
+  void clearAll() {
+    if (!_isInitialized) return;
+    _storage.erase();
+    print('🗑️ All storage cleared');
+  }
+  
+  /// Clear user-specific data
+  void clearUserData() {
+    if (!_isInitialized) return;
+    removeData('cartItems');
+    print('🗑️ User data cleared for: $_currentUserId');
   }
 }

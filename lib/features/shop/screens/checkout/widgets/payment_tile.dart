@@ -8,8 +8,8 @@ import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 
-class TPaymetTile extends StatelessWidget {
-  const TPaymetTile({super.key, required this.paymentMethod});
+class TPaymentTile extends StatelessWidget {
+  const TPaymentTile({super.key, required this.paymentMethod});
 
   final PaymentMethodModel paymentMethod;
 

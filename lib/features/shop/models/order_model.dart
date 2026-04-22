@@ -5,23 +5,23 @@ import 'package:yt_ecommerce_admin_panel/utils/constants/enums.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 
 class OrderModel {
-  final String docId;      // Firestore document ID (for updates/deletes)
-  final String id;         // Custom order ID (ORD-xxxxx) for display
+  final String docId; // Firestore document ID (for updates/deletes)
+  final String id; // Custom order ID (ORD-xxxxx) for display
   final String userId;
   final OrderStatus status;
   final double totalAmount;
   final DateTime orderDate;
   final String paymentMethod;
-
   final String? paymentId;
   final String? paymentStatus;
-
   final AddressModel? address;
   final DateTime? deliveryDate;
   final List<CartItemModel> items;
+  final String? couponCode;
+  final double? discountAmount;
 
   OrderModel({
-    this.docId = '',  // Default empty for new orders
+    this.docId = '', // Default empty for new orders
     required this.id,
     this.userId = '',
     required this.status,
@@ -33,6 +33,8 @@ class OrderModel {
     this.paymentStatus,
     this.address,
     this.deliveryDate,
+    this.couponCode,
+    this.discountAmount,
   });
 
   /// ------------------ GETTERS ------------------
@@ -79,7 +81,8 @@ class OrderModel {
       'paymentId': paymentId,
       'paymentStatus': paymentStatus,
       'address': address?.toJson(),
-      'deliveryDate': deliveryDate != null ? Timestamp.fromDate(deliveryDate!) : null,
+      'deliveryDate':
+          deliveryDate != null ? Timestamp.fromDate(deliveryDate!) : null,
       'items': items.map((item) => item.toJson()).toList(),
     };
   }
@@ -91,7 +94,7 @@ class OrderModel {
 
     // Get status string from Firebase
     String statusString = data['status'] ?? 'pending';
-    
+
     // Convert string to enum
     OrderStatus orderStatus;
     switch (statusString.toLowerCase()) {
@@ -126,7 +129,7 @@ class OrderModel {
     }
 
     return OrderModel(
-      docId: snapshot.id,  // ✅ Firestore document ID
+      docId: snapshot.id, // ✅ Firestore document ID
       id: data['id'] ?? '',
       userId: data['userId'] ?? '',
       status: orderStatus,
@@ -135,11 +138,18 @@ class OrderModel {
       paymentMethod: data['paymentMethod'] ?? 'Unknown',
       paymentId: data['paymentId'],
       paymentStatus: data['paymentStatus'],
-      address: data['address'] != null ? AddressModel.fromMap(data['address']) : null,
-      deliveryDate: data['deliveryDate'] != null ? (data['deliveryDate'] as Timestamp).toDate() : null,
+      address: data['address'] != null
+          ? AddressModel.fromMap(data['address'])
+          : null,
+      deliveryDate: data['deliveryDate'] != null
+          ? (data['deliveryDate'] as Timestamp).toDate()
+          : null,
       items: (data['items'] as List<dynamic>? ?? [])
-          .map((itemData) => CartItemModel.fromJson(itemData as Map<String, dynamic>))
+          .map((itemData) =>
+              CartItemModel.fromJson(itemData as Map<String, dynamic>))
           .toList(),
+      couponCode: data['couponCode'],
+      discountAmount: data['discountAmount']?.toDouble(),
     );
   }
 
@@ -156,6 +166,8 @@ class OrderModel {
     AddressModel? address,
     DateTime? deliveryDate,
     List<CartItemModel>? items,
+    String? couponCode,
+    double? discountAmount,
   }) {
     return OrderModel(
       docId: docId ?? this.docId,
@@ -170,6 +182,8 @@ class OrderModel {
       address: address ?? this.address,
       deliveryDate: deliveryDate ?? this.deliveryDate,
       items: items ?? this.items,
+      couponCode: couponCode ?? this.couponCode,
+      discountAmount: discountAmount ?? this.discountAmount,
     );
   }
 }

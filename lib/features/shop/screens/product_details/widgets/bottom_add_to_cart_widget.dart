@@ -16,7 +16,7 @@ class TBottomAddToCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = CartController.instance;
-    controller.updateAleadyAddedProductValue(product);
+    controller.updateAlreadyAddedProductValue(product);
     final dark = THelperFunctions.isDarkMode(context);
     return Container(
       padding: const EdgeInsets.symmetric(

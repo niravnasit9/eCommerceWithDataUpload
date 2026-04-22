@@ -14,17 +14,24 @@ import 'package:yt_ecommerce_admin_panel/utils/popups/full_screen_loader.dart';
 import 'package:yt_ecommerce_admin_panel/utils/popups/loaders.dart';
 
 class OrderController extends GetxController {
-  static OrderController get instance => Get.find();
+  static OrderController get instance {
+    if (!Get.isRegistered<OrderController>()) {
+      Get.lazyPut(() => OrderController());
+    }
+    return Get.find<OrderController>();
+  }
 
-  final cartController = CartController.instance;
-  final addressController = AddressController.instance;
-  final checkoutController = CheckoutController.instance;
-  final orderRepository = Get.put(OrderRepository());
+  // Get dependencies
+  CartController get cartController => Get.find<CartController>();
+  AddressController get addressController => Get.find<AddressController>();
+  CheckoutController get checkoutController => Get.find<CheckoutController>();
+  OrderRepository get orderRepository => Get.find<OrderRepository>();
+  AuthenticationRepository get authRepository => Get.find<AuthenticationRepository>();
 
   late Razorpay _razorpay;
   final RxBool isProcessingPayment = false.obs;
 
-  /// ✅ Store pending order
+  /// Store pending order
   OrderModel? _pendingOrder;
 
   @override
@@ -40,6 +47,28 @@ class OrderController extends GetxController {
   void onClose() {
     _razorpay.clear();
     super.onClose();
+  }
+
+  /// Calculate shipping based on subtotal
+  double _calculateShipping(double subtotal) {
+    if (subtotal >= 50000) return 0;
+    if (subtotal >= 25000) return 99;
+    if (subtotal >= 10000) return 149;
+    if (subtotal >= 5000) return 199;
+    if (subtotal >= 1000) return 299;
+    return 399;
+  }
+
+  /// Calculate tax (GST 5%)
+  double _calculateTax(double subtotal) {
+    return subtotal * 0.05;
+  }
+
+  /// Calculate final total (subtotal + shipping + tax - discount)
+  double _calculateFinalTotal(double subtotal, double discount) {
+    final shipping = _calculateShipping(subtotal);
+    final tax = _calculateTax(subtotal);
+    return subtotal + shipping + tax - discount;
   }
 
   /// ---------------- FETCH ORDERS ----------------
@@ -76,7 +105,7 @@ class OrderController extends GetxController {
       TFullScreenLoader.openLoadingDialog(
           'Initializing payment...', TImages.pencilAnimation);
 
-      final userId = AuthenticationRepository.instance.authUser?.uid;
+      final userId = authRepository.authUser?.uid;
 
       if (userId == null) {
         TFullScreenLoader.stopLoading();
@@ -84,26 +113,35 @@ class OrderController extends GetxController {
         return;
       }
 
-      /// ✅ Create clean order ID
+      /// Create clean order ID
       final orderId = 'ORD-${DateTime.now().millisecondsSinceEpoch}';
 
-      /// ✅ Store pending order
+      /// Get cart subtotal
+      final subtotal = cartController.totalCartPrice.value;
+      final discount = checkoutController.discountAmount.value;
+      
+      /// Calculate final amount with shipping and tax
+      final finalAmount = _calculateFinalTotal(subtotal, discount);
+
+      /// Store pending order
       _pendingOrder = OrderModel(
         id: orderId,
         userId: userId,
         status: OrderStatus.pending,
-        totalAmount: totalAmount,
+        totalAmount: finalAmount,
         orderDate: DateTime.now(),
         paymentMethod: 'Razorpay',
         address: addressController.selectedAddress.value,
         deliveryDate: DateTime.now().add(const Duration(days: 5)),
         items: cartController.cartItems.toList(),
+        couponCode: checkoutController.couponCode.value,
+        discountAmount: discount,
       );
 
       isProcessingPayment.value = true;
       TFullScreenLoader.stopLoading();
 
-      _openRazorpayCheckout(amount: totalAmount, userId: userId);
+      _openRazorpayCheckout(amount: finalAmount, userId: userId);
     } catch (e) {
       TFullScreenLoader.stopLoading();
       isProcessingPayment.value = false;
@@ -116,7 +154,7 @@ class OrderController extends GetxController {
     required double amount,
     required String userId,
   }) {
-    final user = AuthenticationRepository.instance.authUser;
+    final user = authRepository.authUser;
 
     final options = {
       'key': 'rzp_test_xDH74d48cwl8DF',
@@ -132,8 +170,7 @@ class OrderController extends GetxController {
     };
 
     try {
-      print(options);
-      print('Opening Razorpay...');
+      print('💰 Opening Razorpay with amount: ₹$amount');
       _razorpay.open(options);
     } catch (e) {
       isProcessingPayment.value = false;
@@ -149,13 +186,12 @@ class OrderController extends GetxController {
     try {
       print('✅ Payment Successful: ${response.paymentId}');
 
-      final userId = AuthenticationRepository.instance.authUser?.uid;
+      final userId = authRepository.authUser?.uid;
       if (userId == null || _pendingOrder == null) return;
 
-      TFullScreenLoader.openLoadingDialog(
-          'Saving order...', TImages.pencilAnimation);
+      TFullScreenLoader.openLoadingDialog('Saving order...', TImages.pencilAnimation);
 
-      /// ✅ Update same order
+      /// Update order with payment details
       final finalOrder = _pendingOrder!.copyWith(
         status: OrderStatus.confirmed,
         paymentId: response.paymentId,
@@ -165,6 +201,7 @@ class OrderController extends GetxController {
       await orderRepository.saveOrder(finalOrder, userId);
 
       cartController.clearCart();
+      checkoutController.removeCoupon(); // Reset coupon after order
 
       TFullScreenLoader.stopLoading();
 
@@ -172,8 +209,7 @@ class OrderController extends GetxController {
             image: TImages.orderCompletedAnimation,
             title: 'Payment Successful!',
             subTitle: 'Your order has been placed successfully.',
-            onPressed: () =>
-                Get.offAll(() => const NavigationMenu()),
+            onPressed: () => Get.offAll(() => const NavigationMenu()),
           ));
     } catch (e) {
       TFullScreenLoader.stopLoading();
@@ -191,49 +227,61 @@ class OrderController extends GetxController {
 
     TLoaders.errorSnackBar(
       title: 'Payment Failed',
-      message: response.message ?? 'Try again.',
+      message: response.message ?? 'Please try again with a different payment method.',
     );
   }
 
   /// ---------------- WALLET ----------------
   void _handleExternalWallet(ExternalWalletResponse response) {
-    print('Wallet: ${response.walletName}');
+    print('💰 External Wallet Selected: ${response.walletName}');
     isProcessingPayment.value = false;
   }
 
   /// ---------------- COD ----------------
   void processCODOrder(double totalAmount) async {
     try {
-      TFullScreenLoader.openLoadingDialog(
-          'Placing order...', TImages.pencilAnimation);
+      TFullScreenLoader.openLoadingDialog('Placing order...', TImages.pencilAnimation);
 
-      final userId = AuthenticationRepository.instance.authUser?.uid;
-      if (userId == null) return;
+      final userId = authRepository.authUser?.uid;
+      if (userId == null) {
+        TFullScreenLoader.stopLoading();
+        TLoaders.errorSnackBar(title: 'Error', message: 'User not logged in');
+        return;
+      }
+
+      /// Get cart subtotal
+      final subtotal = cartController.totalCartPrice.value;
+      final discount = checkoutController.discountAmount.value;
+      
+      /// Calculate final amount with shipping and tax
+      final finalAmount = _calculateFinalTotal(subtotal, discount);
 
       final order = OrderModel(
         id: 'ORD-${DateTime.now().millisecondsSinceEpoch}',
         userId: userId,
         status: OrderStatus.pending,
-        totalAmount: totalAmount,
+        totalAmount: finalAmount,
         orderDate: DateTime.now(),
         paymentMethod: 'Cash on Delivery',
         address: addressController.selectedAddress.value,
         deliveryDate: DateTime.now().add(const Duration(days: 5)),
         items: cartController.cartItems.toList(),
+        couponCode: checkoutController.couponCode.value,
+        discountAmount: discount,
       );
 
       await orderRepository.saveOrder(order, userId);
 
       cartController.clearCart();
+      checkoutController.removeCoupon(); // Reset coupon after order
 
       TFullScreenLoader.stopLoading();
 
       Get.offAll(() => SuccessScreen(
             image: TImages.orderCompletedAnimation,
             title: 'Order Placed!',
-            subTitle: 'Cash on Delivery selected.',
-            onPressed: () =>
-                Get.offAll(() => const NavigationMenu()),
+            subTitle: 'Cash on Delivery selected. Our team will contact you shortly.',
+            onPressed: () => Get.offAll(() => const NavigationMenu()),
           ));
     } catch (e) {
       TFullScreenLoader.stopLoading();

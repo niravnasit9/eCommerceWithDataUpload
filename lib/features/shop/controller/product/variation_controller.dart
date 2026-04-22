@@ -6,7 +6,12 @@ import 'package:yt_ecommerce_admin_panel/features/shop/models/product_variation_
 import 'image_controller.dart';
 
 class VariationController extends GetxController {
-  static VariationController get instance => Get.find();
+  static VariationController get instance {
+    if (!Get.isRegistered<VariationController>()) {
+      Get.lazyPut(() => VariationController());
+    }
+    return Get.find<VariationController>();
+  }
 
   /// Variables
   RxMap selectedAttributes = {}.obs;
@@ -28,16 +33,25 @@ class VariationController extends GetxController {
           _isSameAttributeValues(variation.attributeValues, selectedAttributes),
       orElse: () => ProductVariationModel.empty(),
     );
-    // Show the selected Variation image as a Main Image
-    if (selectedVariation.image.isNotEmpty) {}
-    ImagesController.instance.selectedProductImage.value =
-        selectedVariation.image;
-
-    if (selectedVariation.id.isNotEmpty) {
-      final cartcontroller = CartController.instance;
-      cartcontroller.productQuantityInCart.value = cartcontroller
-          .getVariationQuantityInCart(product.id, selectedVariation.id);
+    
+    // Show the selected Variation image as a Main Image (with null check)
+    if (selectedVariation.image.isNotEmpty) {
+      // Safely check if ImagesController is registered
+      if (Get.isRegistered<ImagesController>()) {
+        ImagesController.instance.selectedProductImage.value =
+            selectedVariation.image;
+      }
     }
+
+    // Update cart quantity with null check
+    if (selectedVariation.id.isNotEmpty) {
+      if (Get.isRegistered<CartController>()) {
+        final cartController = CartController.instance;
+        cartController.productQuantityInCart.value = cartController
+            .getVariationQuantityInCart(product.id, selectedVariation.id);
+      }
+    }
+    
     // Assign Selected Variation
     this.selectedVariation.value = selectedVariation;
 
@@ -61,11 +75,10 @@ class VariationController extends GetxController {
   /// Check Attribute availability / Stock in Variation
   Set<String?> getAttributesAvailabilityInVariation(
       List<ProductVariationModel> variations, String attributeName) {
-// Pass the variations to check which attributes are available and stock is not
+    // Pass the variations to check which attributes are available and stock is not
     final availableVariationAttributeValues = variations
         .where((variation) =>
-
-// Check Empty / Out of Stock Attributes
+            // Check Empty / Out of Stock Attributes
             variation.attributeValues[attributeName] != null &&
             variation.attributeValues[attributeName]!.isNotEmpty &&
             variation.stock > 0)

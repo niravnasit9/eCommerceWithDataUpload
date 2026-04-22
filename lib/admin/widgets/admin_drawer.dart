@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:yt_ecommerce_admin_panel/admin/screens/admin_coupons.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/authentication/authentication_repository.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_products.dart';
 import 'package:yt_ecommerce_admin_panel/admin/screens/admin_brands.dart';
@@ -143,6 +144,14 @@ class AdminDrawer extends StatelessWidget {
                     title: 'Users',
                     onTap: () {
                       Get.to(() => const AdminUsers());
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: Iconsax.discount_circle,
+                    title: 'Coupons',
+                    onTap: () {
+                      Get.to(() => const AdminCoupons());
                     },
                   ),
                   _buildDrawerItem(

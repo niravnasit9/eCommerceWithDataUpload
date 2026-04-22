@@ -8,25 +8,26 @@ import 'package:yt_ecommerce_admin_panel/utils/popups/loaders.dart';
 
 class CartController extends GetxController {
   static CartController get instance => Get.find();
+  
   RxInt noOfCartItems = 0.obs;
   RxDouble totalCartPrice = 0.0.obs;
   RxInt productQuantityInCart = 0.obs;
   RxList<CartItemModel> cartItems = <CartItemModel>[].obs;
   final variationController = VariationController.instance;
 
-  CartController() {
-    loadCartItems();
+  @override
+  void onInit() {
+    super.onInit();
+    // Don't load here - wait for user to be logged in
+    // loadCartItems will be called after user login
   }
 
-  // add items to cart
   void addToCart(ProductModel product) {
-    // quantity check
     if (productQuantityInCart.value < 1) {
       TLoaders.customToast(message: "Select Quantity");
       return;
     }
 
-    // Variation Selected?
     if (product.productType == ProductType.variable.toString() &&
         variationController.selectedVariation.value.id.isEmpty) {
       TLoaders.customToast(message: "Select Variation");
@@ -46,8 +47,8 @@ class CartController extends GetxController {
         return;
       }
     }
-    final selectedCartItem =
-        convertToCartItem(product, productQuantityInCart.value);
+    
+    final selectedCartItem = convertToCartItem(product, productQuantityInCart.value);
 
     int index = cartItems.indexWhere((cartItems) =>
         cartItems.productId == selectedCartItem.productId &&
@@ -100,18 +101,17 @@ class CartController extends GetxController {
         TLoaders.customToast(message: 'Product removed from the Cart.');
         Get.back();
       },
-      onCancel: () => () => Get.back(),
+      onCancel: () => Get.back(),
     );
   }
 
-  void updateAleadyAddedProductValue(ProductModel product) {
+  void updateAlreadyAddedProductValue(ProductModel product) {
     if (product.productType == ProductType.single.toString()) {
       productQuantityInCart.value = getProductQuantityInCart(product.id);
     } else {
       final variationId = variationController.selectedVariation.value.id;
       if (variationId.isNotEmpty) {
-        productQuantityInCart.value =
-            getVariationQuantityInCart(product.id, variationId);
+        productQuantityInCart.value = getVariationQuantityInCart(product.id, variationId);
       } else {
         productQuantityInCart.value = 0;
       }
@@ -143,35 +143,72 @@ class CartController extends GetxController {
     );
   }
 
-  updateCart() {
+  void updateCart() {
     updateCartTotals();
     saveCartItems();
     cartItems.refresh();
   }
 
   void updateCartTotals() {
-    double calculatedTotlaPrice = 0.0;
+    double calculatedTotalPrice = 0.0;
     int calculatedNoOfItems = 0;
     for (var items in cartItems) {
-      calculatedTotlaPrice += (items.price) * items.quantity.toDouble();
+      calculatedTotalPrice += (items.price) * items.quantity.toDouble();
       calculatedNoOfItems += items.quantity;
     }
-    totalCartPrice.value = double.parse(calculatedTotlaPrice.toStringAsFixed(2));
+    totalCartPrice.value = double.parse(calculatedTotalPrice.toStringAsFixed(2));
     noOfCartItems.value = calculatedNoOfItems;
+    
+    print('🛒 Cart Updated - Total: ₹${totalCartPrice.value}, Items: $calculatedNoOfItems');
   }
 
   void saveCartItems() {
-    final cartItemScreen = cartItems.map((item) => item.toJson()).toList();
-    TLocalStorage.instance().writeData('cartItems', cartItemScreen);
+    try {
+      final storage = TLocalStorage.instance;
+      if (!storage.isInitialized) {
+        print('⚠️ Storage not initialized, cannot save cart');
+        return;
+      }
+      
+      final cartItemScreen = cartItems.map((item) => item.toJson()).toList();
+      storage.writeData('cartItems', cartItemScreen);
+      print('💾 Cart saved: ${cartItemScreen.length} items');
+    } catch (e) {
+      print('❌ Error saving cart items: $e');
+    }
   }
 
-  void loadCartItems() {
-    final cartItemStrings =
-        TLocalStorage.instance().readData<List<dynamic>>('cartItems');
-    if (cartItemStrings != null) {
-      cartItems.assignAll(cartItemStrings
-          .map((item) => CartItemModel.fromJson(item as Map<String, dynamic>)));
-      updateCartTotals();
+  Future<void> loadCartItems() async {
+    try {
+      final storage = TLocalStorage.instance;
+      
+      if (!storage.isInitialized) {
+        print('⚠️ Storage not initialized, cannot load cart');
+        return;
+      }
+      
+      final cartItemStrings = storage.readData('cartItems') as List<dynamic>?;
+      print('📦 Loading cart from storage: ${cartItemStrings?.length ?? 0} items');
+      
+      if (cartItemStrings != null && cartItemStrings.isNotEmpty) {
+        final loadedItems = cartItemStrings
+            .map((item) => CartItemModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+        
+        cartItems.assignAll(loadedItems);
+        updateCartTotals();
+        print('✅ Cart loaded successfully: ${cartItems.length} items, Total: ₹${totalCartPrice.value}');
+      } else {
+        print('⚠️ No cart items found in storage');
+        cartItems.clear();
+        totalCartPrice.value = 0;
+        noOfCartItems.value = 0;
+      }
+    } catch (e) {
+      print('❌ Error loading cart items: $e');
+      cartItems.clear();
+      totalCartPrice.value = 0;
+      noOfCartItems.value = 0;
     }
   }
 
@@ -194,5 +231,6 @@ class CartController extends GetxController {
     productQuantityInCart.value = 0;
     cartItems.clear();
     updateCart();
+    print('🗑️ Cart cleared');
   }
 }

@@ -13,20 +13,31 @@ import 'package:yt_ecommerce_admin_panel/features/shop/screens/checkout/widgets/
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
-import 'package:yt_ecommerce_admin_panel/utils/helpers/pricing_calculator.dart';
 import 'package:yt_ecommerce_admin_panel/utils/popups/loaders.dart';
 
 class CheckoutScreen extends StatelessWidget {
   const CheckoutScreen({super.key});
 
+  double _calculateShipping(double subtotal) {
+    if (subtotal >= 50000) return 0;
+    if (subtotal >= 25000) return 99;
+    if (subtotal >= 10000) return 149;
+    if (subtotal >= 5000) return 199;
+    if (subtotal >= 1000) return 299;
+    return 399;
+  }
+
+  double _calculateTax(double subtotal) {
+    return subtotal * 0.05;
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
-    final cartController = CartController.instance;
-    final checkoutController = CheckoutController.instance;
-    final subTotal = cartController.totalCartPrice.value;
-    final orderController = Get.put(OrderController());
-    final totalAmount = TPricingCalculator.calculateTotalPrice(subTotal, 'IN');
+    final cartController = Get.find<CartController>();
+    final checkoutController = Get.find<CheckoutController>();
+    final orderController = Get.find<OrderController>();
+    
     return Scaffold(
       appBar: TAppBar(
         title: Text('Order Review',
@@ -53,19 +64,19 @@ class CheckoutScreen extends StatelessWidget {
                 backgroundColor: dark ? TColors.black : TColors.white,
                 child: const Column(
                   children: [
-                    ///  Pricing
+                    /// Pricing
                     TBillingAmountSection(),
                     SizedBox(height: TSizes.spaceBtwItems),
 
-                    ///  Divider
+                    /// Divider
                     Divider(),
                     SizedBox(height: TSizes.spaceBtwItems),
 
-                    ///  Payment Method
+                    /// Payment Method
                     TBillingPaymentSection(),
                     SizedBox(height: TSizes.spaceBtwItems),
 
-                    ///  Address
+                    /// Address
                     TBillingAddressSection(),
                     SizedBox(height: TSizes.spaceBtwItems),
                   ],
@@ -77,37 +88,41 @@ class CheckoutScreen extends StatelessWidget {
       ),
 
       /// Checkout Button
+      bottomNavigationBar: Obx(() {
+        final subTotal = cartController.totalCartPrice.value;
+        final shipping = _calculateShipping(subTotal);
+        final tax = _calculateTax(subTotal);
+        final discount = checkoutController.discountAmount.value;
+        final totalAmount = subTotal + shipping + tax - discount;
+        
+        return Padding(
+          padding: const EdgeInsets.all(TSizes.defaultSpace),
+          child: ElevatedButton(
+            onPressed: subTotal > 0
+                ? () {
+                    final method = checkoutController.selectedPaymentMethod.value.name;
 
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(TSizes.defaultSpace),
-        child: ElevatedButton(
-          onPressed: subTotal > 0
-              ? () {
-                  final method =
-                      checkoutController.selectedPaymentMethod.value.name;
-
-                  print('Selected Payment: $method'); // debug
-
-                  if (method == 'Razorpay') {
-                    orderController.processOrder(totalAmount);
-                  } else if (method == 'Cash on Delivery') {
-                    orderController.processCODOrder(totalAmount);
-                  } else {
-                    TLoaders.warningSnackBar(
-                      title: 'Select Payment Method',
-                      message: 'Please select a valid payment method.',
-                    );
+                    if (method == 'Razorpay') {
+                      orderController.processOrder(totalAmount);
+                    } else if (method == 'Cash on Delivery') {
+                      orderController.processCODOrder(totalAmount);
+                    } else {
+                      TLoaders.warningSnackBar(
+                        title: 'Select Payment Method',
+                        message: 'Please select a valid payment method.',
+                      );
+                    }
                   }
-                }
-              : () {
-                  TLoaders.warningSnackBar(
-                    title: 'Empty Cart',
-                    message: 'Add items to the cart in order to proceed.',
-                  );
-                },
-          child: Text('Checkout ₹$totalAmount'),
-        ),
-      ),
+                : () {
+                    TLoaders.warningSnackBar(
+                      title: 'Empty Cart',
+                      message: 'Add items to the cart in order to proceed.',
+                    );
+                  },
+            child: Text('Pay ₹${totalAmount.toStringAsFixed(0)}'),
+          ),
+        );
+      }),
     );
   }
 }
