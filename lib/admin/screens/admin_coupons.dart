@@ -10,14 +10,12 @@ import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_delete_confirmation.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
-import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 
 class AdminCoupons extends StatelessWidget {
   const AdminCoupons({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final dark = THelperFunctions.isDarkMode(context);
     final controller = Get.put(AdminCouponController());
 
     return Scaffold(
