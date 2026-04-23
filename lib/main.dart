@@ -6,7 +6,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:yt_ecommerce_admin_panel/app.dart';
 import 'package:yt_ecommerce_admin_panel/bindings/general_bindings.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/authentication/authentication_repository.dart';
-import 'package:yt_ecommerce_admin_panel/data/repositories/orders/coupon_repository.dart';
+import 'package:yt_ecommerce_admin_panel/data/repositories/coupons/coupon_repository.dart';
 import 'package:yt_ecommerce_admin_panel/firebase_options.dart';
 import 'package:yt_ecommerce_admin_panel/utils/local_storage/storage_utility.dart';
 

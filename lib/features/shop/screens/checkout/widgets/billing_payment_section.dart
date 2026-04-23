@@ -24,25 +24,27 @@ class TBillingPaymentSection extends StatelessWidget {
           onPressed: () => controller.selectPaymentMethod(context),
         ),
         const SizedBox(height: TSizes.spaceBtwItems / 2),
-        Row(
-          children: [
-            TRoundedContainer(
-              width: 60,
-              height: 35,
-              backgroundColor: dark ? TColors.light : TColors.white,
-              padding: const EdgeInsets.all(TSizes.sm),
-              child: Image(
-                image: AssetImage(controller.selectedPaymentMethod.value.image),
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(Iconsax.card, size: 20),
+        Obx(  // ✅ Add Obx to listen to changes
+          () => Row(
+            children: [
+              TRoundedContainer(
+                width: 60,
+                height: 35,
+                backgroundColor: dark ? TColors.light : TColors.white,
+                padding: const EdgeInsets.all(TSizes.sm),
+                child: Image(
+                  image: AssetImage(controller.selectedPaymentMethod.value.image),
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(Iconsax.card, size: 20),
+                ),
               ),
-            ),
-            const SizedBox(width: TSizes.spaceBtwItems / 2),
-            Text(
-              controller.selectedPaymentMethod.value.name,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ],
+              const SizedBox(width: TSizes.spaceBtwItems / 2),
+              Text(
+                controller.selectedPaymentMethod.value.name,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ],
+          ),
         ),
       ],
     );

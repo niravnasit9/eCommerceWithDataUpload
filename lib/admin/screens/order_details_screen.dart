@@ -42,9 +42,7 @@ class AdminOrderDetailsScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              // Print order or share
-            },
+            onPressed: () {},
             icon: const Icon(Iconsax.printer),
           ),
         ],
@@ -186,6 +184,16 @@ class AdminOrderDetailsScreen extends StatelessWidget {
                           Iconsax.user,
                           dark,
                         ),
+                        /// ✅ Add Coupon if applied
+                        if (order.couponCode != null && order.couponCode!.isNotEmpty)
+                          _buildInfoRow(
+                            context,
+                            'Coupon Applied',
+                            order.couponCode!,
+                            Iconsax.discount_circle,
+                            dark,
+                            statusColor: TColors.success,
+                          ),
                       ],
                     ),
                   ),
@@ -371,7 +379,7 @@ class AdminOrderDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: TSizes.spaceBtwSections),
 
-                  /// Payment Summary Section
+                  /// Payment Summary Section - ✅ UPDATED with proper breakdown
                   Text(
                     'Payment Summary',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -392,29 +400,48 @@ class AdminOrderDetailsScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
+                        /// Subtotal
                         _buildSummaryRow(
                           context,
                           'Subtotal',
-                          currencyFormat.format(order.totalAmount),
+                          currencyFormat.format(order.subtotal ?? order.totalAmount),
                           dark,
                         ),
                         const SizedBox(height: TSizes.spaceBtwItems),
+                        
+                        /// Shipping
                         _buildSummaryRow(
                           context,
                           'Shipping',
-                          'Free',
+                          (order.shippingCost ?? 0) == 0 ? 'Free' : currencyFormat.format(order.shippingCost ?? 0),
                           dark,
-                          isFree: true,
+                          isFree: (order.shippingCost ?? 0) == 0,
                         ),
                         const SizedBox(height: TSizes.spaceBtwItems),
+                        
+                        /// Tax
                         _buildSummaryRow(
                           context,
-                          'Tax',
-                          'Included',
+                          'Tax (GST 5%)',
+                          currencyFormat.format(order.taxAmount ?? 0),
                           dark,
-                          isFree: true,
                         ),
-                        const Divider(height: TSizes.spaceBtwItems),
+                        
+                        /// Discount (if applied)
+                        if ((order.discountAmount ?? 0) > 0) ...[
+                          const SizedBox(height: TSizes.spaceBtwItems),
+                          _buildSummaryRow(
+                            context,
+                            'Discount',
+                            '-${currencyFormat.format(order.discountAmount ?? 0)}',
+                            dark,
+                            isDiscount: true,
+                          ),
+                        ],
+                        
+                        const Divider(height: TSizes.spaceBtwSections),
+                        
+                        /// Total Amount
                         _buildSummaryRow(
                           context,
                           'Total Amount',
@@ -560,6 +587,7 @@ class AdminOrderDetailsScreen extends StatelessWidget {
     String value,
     bool dark, {
     bool isFree = false,
+    bool isDiscount = false,
     bool isTotal = false,
   }) {
     return Row(
@@ -577,12 +605,14 @@ class AdminOrderDetailsScreen extends StatelessWidget {
         Text(
           value,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isFree
+                color: isDiscount
                     ? TColors.success
-                    : (isTotal
-                        ? TColors.primary
-                        : (dark ? TColors.textWhite : TColors.textPrimary)),
-                fontWeight: isTotal ? FontWeight.bold : null,
+                    : (isFree
+                        ? TColors.success
+                        : (isTotal
+                            ? TColors.primary
+                            : (dark ? TColors.textWhite : TColors.textPrimary))),
+                fontWeight: isDiscount || isTotal ? FontWeight.bold : null,
               ),
         ),
       ],
@@ -591,7 +621,6 @@ class AdminOrderDetailsScreen extends StatelessWidget {
 
   void _updateStatus(BuildContext context, String newStatus) {
     Get.back();
-    // Update order status
     final controller = Get.find<AdminOrderController>();
     controller.updateOrderStatus(order.id, newStatus);
   }

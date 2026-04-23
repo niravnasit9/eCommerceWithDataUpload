@@ -1,9 +1,10 @@
 import 'package:get/get.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_banner_controller.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_brand_controller.dart';
+import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_coupon_controller.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/banners/banner_repository.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/brnads/brand_repository.dart';
-import 'package:yt_ecommerce_admin_panel/data/repositories/orders/coupon_repository.dart';
+import 'package:yt_ecommerce_admin_panel/data/repositories/coupons/coupon_repository.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/orders/order_repository.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/product/product_repository.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/controllers/address_controller.dart';
@@ -48,5 +49,6 @@ class GeneralBindings extends Bindings {
     // Admin Controllers - Last
     Get.put(AdminBannerController(), permanent: true);
     Get.put(AdminBrandController(), permanent: true);
+    Get.put(AdminCouponController(), permanent: true);
   }
 }

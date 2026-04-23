@@ -9,33 +9,88 @@ import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 
 class TPaymentTile extends StatelessWidget {
-  const TPaymentTile({super.key, required this.paymentMethod});
+  const TPaymentTile({
+    super.key,
+    required this.paymentMethod,
+  });
 
   final PaymentMethodModel paymentMethod;
 
   @override
   Widget build(BuildContext context) {
-    final controller = CheckoutController.instance;
-    return ListTile(
-      contentPadding: const EdgeInsets.all(0),
-      onTap: () {
-        controller.selectedPaymentMethod.value = paymentMethod;
-        Get.back();
-      },
-      leading: TRoundedContainer(
-        width: 60,
-        height: 40,
-        backgroundColor: THelperFunctions.isDarkMode(context)
-            ? TColors.light
-            : TColors.white,
-        padding: const EdgeInsets.all(TSizes.sm),
-        child: Image(
-          image: AssetImage(paymentMethod.image),
-          fit: BoxFit.contain,
+    final dark = THelperFunctions.isDarkMode(context);
+    final controller = Get.find<CheckoutController>();
+
+    return Obx(
+      () => GestureDetector(
+        onTap: () {
+          controller.selectedPaymentMethod.value = paymentMethod;
+          Get.back(); // Close the bottom sheet
+        },
+        child: TRoundedContainer(
+          showBorder: true,
+          padding: const EdgeInsets.all(TSizes.md),
+          backgroundColor: dark ? TColors.dark : TColors.white,
+          borderColor: controller.selectedPaymentMethod.value.name == paymentMethod.name
+              ? TColors.primary
+              : Colors.transparent,
+          child: Row(
+            children: [
+              /// Radio Button
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: controller.selectedPaymentMethod.value.name == paymentMethod.name
+                          ? TColors.primary
+                          : dark
+                              ? TColors.borderSecondary
+                              : TColors.borderPrimary,
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: controller.selectedPaymentMethod.value.name == paymentMethod.name
+                        ? Container(
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: TColors.primary,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+              const SizedBox(width: TSizes.spaceBtwItems),
+
+              /// Image
+              TRoundedContainer(
+                width: 60,
+                height: 35,
+                backgroundColor: dark ? TColors.light : TColors.white,
+                padding: const EdgeInsets.all(TSizes.sm),
+                child: Image(
+                  image: AssetImage(paymentMethod.image),
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(Iconsax.card, size: 20),
+                ),
+              ),
+              const SizedBox(width: TSizes.spaceBtwItems),
+
+              /// Title
+              Text(
+                paymentMethod.name,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ],
+          ),
         ),
       ),
-      title: Text(paymentMethod.name),
-      trailing: const Icon(Iconsax.arrow_right_34),
     );
   }
 }

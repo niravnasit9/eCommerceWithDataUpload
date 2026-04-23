@@ -5,23 +5,32 @@ import 'package:yt_ecommerce_admin_panel/utils/constants/enums.dart';
 import 'package:yt_ecommerce_admin_panel/utils/helpers/helper_functions.dart';
 
 class OrderModel {
-  final String docId; // Firestore document ID (for updates/deletes)
-  final String id; // Custom order ID (ORD-xxxxx) for display
+  final String docId;
+  final String id;
   final String userId;
   final OrderStatus status;
   final double totalAmount;
   final DateTime orderDate;
   final String paymentMethod;
+
   final String? paymentId;
   final String? paymentStatus;
+
   final AddressModel? address;
   final DateTime? deliveryDate;
   final List<CartItemModel> items;
+
+  // ✅ New fields for coupon tracking
   final String? couponCode;
   final double? discountAmount;
+  
+  // ✅ New fields for order breakdown
+  final double? subtotal;
+  final double? shippingCost;
+  final double? taxAmount;
 
   OrderModel({
-    this.docId = '', // Default empty for new orders
+    this.docId = '',
     required this.id,
     this.userId = '',
     required this.status,
@@ -35,40 +44,27 @@ class OrderModel {
     this.deliveryDate,
     this.couponCode,
     this.discountAmount,
+    this.subtotal,
+    this.shippingCost,
+    this.taxAmount,
   });
 
-  /// ------------------ GETTERS ------------------
-
   String get formattedOrderDate => THelperFunctions.getFormattedDate(orderDate);
-
-  String get formattedDeliveryDate => deliveryDate != null
-      ? THelperFunctions.getFormattedDate(deliveryDate!)
-      : '';
+  String get formattedDeliveryDate => deliveryDate != null ? THelperFunctions.getFormattedDate(deliveryDate!) : '';
 
   String get orderStatusText {
     switch (status) {
-      case OrderStatus.pending:
-        return 'Pending';
-      case OrderStatus.processing:
-        return 'Processing';
-      case OrderStatus.confirmed:
-        return 'Confirmed';
-      case OrderStatus.shipped:
-        return 'Shipped';
-      case OrderStatus.outForDelivery:
-        return 'Out for Delivery';
-      case OrderStatus.delivered:
-        return 'Delivered';
-      case OrderStatus.cancelled:
-        return 'Cancelled';
-      case OrderStatus.refunded:
-        return 'Refunded';
-      // default:
-      //   return 'Pending';
+      case OrderStatus.pending: return 'Pending';
+      case OrderStatus.processing: return 'Processing';
+      case OrderStatus.confirmed: return 'Confirmed';
+      case OrderStatus.shipped: return 'Shipped';
+      case OrderStatus.outForDelivery: return 'Out for Delivery';
+      case OrderStatus.delivered: return 'Delivered';
+      case OrderStatus.cancelled: return 'Cancelled';
+      case OrderStatus.refunded: return 'Refunded';
+      default: return 'Pending';
     }
   }
-
-  /// ------------------ TO JSON ------------------
 
   Map<String, dynamic> toJson() {
     return {
@@ -81,55 +77,35 @@ class OrderModel {
       'paymentId': paymentId,
       'paymentStatus': paymentStatus,
       'address': address?.toJson(),
-      'deliveryDate':
-          deliveryDate != null ? Timestamp.fromDate(deliveryDate!) : null,
+      'deliveryDate': deliveryDate != null ? Timestamp.fromDate(deliveryDate!) : null,
       'items': items.map((item) => item.toJson()).toList(),
+      'couponCode': couponCode,
+      'discountAmount': discountAmount,
+      'subtotal': subtotal,
+      'shippingCost': shippingCost,
+      'taxAmount': taxAmount,
     };
   }
 
-  /// ------------------ FROM SNAPSHOT ------------------
-
   factory OrderModel.fromSnapshot(DocumentSnapshot snapshot) {
     final data = snapshot.data() as Map<String, dynamic>;
-
-    // Get status string from Firebase
+    
     String statusString = data['status'] ?? 'pending';
-
-    // Convert string to enum
     OrderStatus orderStatus;
     switch (statusString.toLowerCase()) {
-      case 'pending':
-        orderStatus = OrderStatus.pending;
-        break;
-      case 'processing':
-        orderStatus = OrderStatus.processing;
-        break;
-      case 'confirmed':
-        orderStatus = OrderStatus.confirmed;
-        break;
-      case 'shipped':
-        orderStatus = OrderStatus.shipped;
-        break;
-      case 'out for delivery':
-      case 'outfordelivery':
-      case 'out_for_delivery':
-        orderStatus = OrderStatus.outForDelivery;
-        break;
-      case 'delivered':
-        orderStatus = OrderStatus.delivered;
-        break;
-      case 'cancelled':
-        orderStatus = OrderStatus.cancelled;
-        break;
-      case 'refunded':
-        orderStatus = OrderStatus.refunded;
-        break;
-      default:
-        orderStatus = OrderStatus.pending;
+      case 'pending': orderStatus = OrderStatus.pending; break;
+      case 'processing': orderStatus = OrderStatus.processing; break;
+      case 'confirmed': orderStatus = OrderStatus.confirmed; break;
+      case 'shipped': orderStatus = OrderStatus.shipped; break;
+      case 'out for delivery': orderStatus = OrderStatus.outForDelivery; break;
+      case 'delivered': orderStatus = OrderStatus.delivered; break;
+      case 'cancelled': orderStatus = OrderStatus.cancelled; break;
+      case 'refunded': orderStatus = OrderStatus.refunded; break;
+      default: orderStatus = OrderStatus.pending;
     }
 
     return OrderModel(
-      docId: snapshot.id, // ✅ Firestore document ID
+      docId: snapshot.id,
       id: data['id'] ?? '',
       userId: data['userId'] ?? '',
       status: orderStatus,
@@ -138,18 +114,14 @@ class OrderModel {
       paymentMethod: data['paymentMethod'] ?? 'Unknown',
       paymentId: data['paymentId'],
       paymentStatus: data['paymentStatus'],
-      address: data['address'] != null
-          ? AddressModel.fromMap(data['address'])
-          : null,
-      deliveryDate: data['deliveryDate'] != null
-          ? (data['deliveryDate'] as Timestamp).toDate()
-          : null,
-      items: (data['items'] as List<dynamic>? ?? [])
-          .map((itemData) =>
-              CartItemModel.fromJson(itemData as Map<String, dynamic>))
-          .toList(),
+      address: data['address'] != null ? AddressModel.fromMap(data['address']) : null,
+      deliveryDate: data['deliveryDate'] != null ? (data['deliveryDate'] as Timestamp).toDate() : null,
+      items: (data['items'] as List<dynamic>? ?? []).map((itemData) => CartItemModel.fromJson(itemData as Map<String, dynamic>)).toList(),
       couponCode: data['couponCode'],
       discountAmount: data['discountAmount']?.toDouble(),
+      subtotal: data['subtotal']?.toDouble(),
+      shippingCost: data['shippingCost']?.toDouble(),
+      taxAmount: data['taxAmount']?.toDouble(),
     );
   }
 
@@ -168,6 +140,9 @@ class OrderModel {
     List<CartItemModel>? items,
     String? couponCode,
     double? discountAmount,
+    double? subtotal,
+    double? shippingCost,
+    double? taxAmount,
   }) {
     return OrderModel(
       docId: docId ?? this.docId,
@@ -184,6 +159,9 @@ class OrderModel {
       items: items ?? this.items,
       couponCode: couponCode ?? this.couponCode,
       discountAmount: discountAmount ?? this.discountAmount,
+      subtotal: subtotal ?? this.subtotal,
+      shippingCost: shippingCost ?? this.shippingCost,
+      taxAmount: taxAmount ?? this.taxAmount,
     );
   }
 }

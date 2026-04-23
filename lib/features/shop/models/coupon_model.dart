@@ -12,6 +12,9 @@ class CouponModel {
   DateTime validTo;
   int usageLimit;
   int usedCount;
+  final List<String> usedByUsers; // User IDs who used this coupon
+  final Map<String, DateTime> usageDetails; // User ID -> Usage timestamp
+
   bool isActive;
   List<String> applicableProducts;
   List<String> applicableCategories;
@@ -30,6 +33,8 @@ class CouponModel {
     required this.validTo,
     required this.usageLimit,
     required this.usedCount,
+    this.usedByUsers = const [],
+    this.usageDetails = const {},
     required this.isActive,
     required this.applicableProducts,
     required this.applicableCategories,
@@ -55,7 +60,9 @@ class CouponModel {
 
   /// Calculate discount amount
   double calculateDiscount(double orderAmount) {
-    if (!isActive || DateTime.now().isBefore(validFrom) || DateTime.now().isAfter(validTo)) {
+    if (!isActive ||
+        DateTime.now().isBefore(validFrom) ||
+        DateTime.now().isAfter(validTo)) {
       return 0;
     }
     if (usedCount >= usageLimit && usageLimit > 0) {
@@ -79,29 +86,33 @@ class CouponModel {
   }
 
   bool get isExpired => DateTime.now().isAfter(validTo);
-  bool get isValid => isActive && !isExpired && (usageLimit == 0 || usedCount < usageLimit);
-  String get discountText => discountType == 'percentage' 
-      ? '${discountValue.toInt()}% OFF' 
+  bool get isValid =>
+      isActive && !isExpired && (usageLimit == 0 || usedCount < usageLimit);
+  String get discountText => discountType == 'percentage'
+      ? '${discountValue.toInt()}% OFF'
       : '₹${discountValue.toInt()} OFF';
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'code': code.toUpperCase(),
-    'description': description,
-    'discountType': discountType,
-    'discountValue': discountValue,
-    'minimumOrderAmount': minimumOrderAmount,
-    'maximumDiscount': maximumDiscount,
-    'validFrom': Timestamp.fromDate(validFrom),
-    'validTo': Timestamp.fromDate(validTo),
-    'usageLimit': usageLimit,
-    'usedCount': usedCount,
-    'isActive': isActive,
-    'applicableProducts': applicableProducts,
-    'applicableCategories': applicableCategories,
-    'createdAt': Timestamp.fromDate(createdAt),
-    'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
-  };
+        'id': id,
+        'code': code.toUpperCase(),
+        'description': description,
+        'discountType': discountType,
+        'discountValue': discountValue,
+        'minimumOrderAmount': minimumOrderAmount,
+        'maximumDiscount': maximumDiscount,
+        'validFrom': Timestamp.fromDate(validFrom),
+        'validTo': Timestamp.fromDate(validTo),
+        'usageLimit': usageLimit,
+        'usedCount': usedCount,
+        'usedByUsers': usedByUsers,
+        'usageDetails':
+            usageDetails.map((k, v) => MapEntry(k, Timestamp.fromDate(v))),
+        'isActive': isActive,
+        'applicableProducts': applicableProducts,
+        'applicableCategories': applicableCategories,
+        'createdAt': Timestamp.fromDate(createdAt),
+        'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      };
 
   factory CouponModel.fromSnapshot(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -117,11 +128,26 @@ class CouponModel {
       validTo: (data['validTo'] as Timestamp).toDate(),
       usageLimit: data['usageLimit'] ?? 0,
       usedCount: data['usedCount'] ?? 0,
+      usedByUsers: List<String>.from(data['usedByUsers'] ?? []),
+usageDetails: (data['usageDetails'] as Map<String, dynamic>? ?? {}).map(
+  (k, v) => MapEntry(k, (v as Timestamp).toDate()),
+),
+
       isActive: data['isActive'] ?? true,
       applicableProducts: List<String>.from(data['applicableProducts'] ?? []),
-      applicableCategories: List<String>.from(data['applicableCategories'] ?? []),
+      applicableCategories:
+          List<String>.from(data['applicableCategories'] ?? []),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
     );
+  }
+
+  void recordUsage(String userId) {
+    if (!usedByUsers.contains(userId)) {
+      usedByUsers.add(userId);
+    }
+    usageDetails[userId] = DateTime.now();
   }
 }

@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/admin/controllers/admin_controller.dart';
 import 'package:yt_ecommerce_admin_panel/admin/forms/add_banner_form.dart';
 import 'package:yt_ecommerce_admin_panel/admin/forms/add_brand_form.dart';
+import 'package:yt_ecommerce_admin_panel/admin/forms/add_coupon_form.dart';
 import 'package:yt_ecommerce_admin_panel/admin/forms/add_product_form.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_quick_action_card.dart';
 import 'package:yt_ecommerce_admin_panel/admin/widgets/admin_stats_card.dart';
@@ -186,32 +187,53 @@ class AdminDashboard extends StatelessWidget {
           ),
           const SizedBox(height: TSizes.spaceBtwItems),
 
-          Row(
-            children: [
-              Expanded(
-                child: AdminQuickActionCard(
-                  icon: Iconsax.add_square,
-                  title: 'Add Product',
-                  onTap: () => Get.to(() => const AddProductForm()),
+// Responsive Grid for Quick Actions
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Determine number of columns based on screen width
+              int crossAxisCount = constraints.maxWidth > 800
+                  ? 4
+                  : constraints.maxWidth > 600
+                      ? 3
+                      : 2;
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: TSizes.spaceBtwItems,
+                  crossAxisSpacing: TSizes.spaceBtwItems,
+                  childAspectRatio: 1.1, // Adjust this value for better fit
                 ),
-              ),
-              const SizedBox(width: TSizes.spaceBtwItems),
-              Expanded(
-                child: AdminQuickActionCard(
-                  icon: Iconsax.tag,
-                  title: 'Add Brand',
-                  onTap: () => Get.to(() => const AddBrandForm()),
-                ),
-              ),
-              const SizedBox(width: TSizes.spaceBtwItems),
-              Expanded(
-                child: AdminQuickActionCard(
-                  icon: Iconsax.image,
-                  title: 'Add Banner',
-                  onTap: () => Get.to(() => const AddBannerForm()),
-                ),
-              ),
-            ],
+                itemCount: 4, // Number of quick actions
+                itemBuilder: (_, index) {
+                  final actions = [
+                    AdminQuickActionCard(
+                      icon: Iconsax.add_square,
+                      title: 'Add Product',
+                      onTap: () => Get.to(() => const AddProductForm()),
+                    ),
+                    AdminQuickActionCard(
+                      icon: Iconsax.tag,
+                      title: 'Add Brand',
+                      onTap: () => Get.to(() => const AddBrandForm()),
+                    ),
+                    AdminQuickActionCard(
+                      icon: Iconsax.image,
+                      title: 'Add Banner',
+                      onTap: () => Get.to(() => const AddBannerForm()),
+                    ),
+                    AdminQuickActionCard(
+                      icon: Iconsax.discount_circle,
+                      title: 'Add Coupon',
+                      onTap: () => Get.to(() => const AddCouponForm()),
+                    ),
+                  ][index];
+                  return actions;
+                },
+              );
+            },
           ),
         ],
       ),

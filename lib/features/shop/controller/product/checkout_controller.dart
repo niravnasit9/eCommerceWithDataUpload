@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/texts/section_heading.dart';
-import 'package:yt_ecommerce_admin_panel/data/repositories/orders/coupon_repository.dart';
+import 'package:yt_ecommerce_admin_panel/data/repositories/coupons/coupon_repository.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/cart_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/coupon_model.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/models/payment_method_model.dart';
@@ -20,6 +20,7 @@ class CheckoutController extends GetxController {
   final Rx<CouponModel?> appliedCoupon = Rx<CouponModel?>(null);
   final discountAmount = 0.0.obs;
   final couponCode = ''.obs;
+  final appliedCouponId = ''.obs; // ✅ Add this to store coupon ID
   final availableCoupons = <CouponModel>[].obs;
   final isLoadingCoupons = false.obs;
   final searchResults = <CouponModel>[].obs;
@@ -38,13 +39,11 @@ class CheckoutController extends GetxController {
     selectedPaymentMethod.value =
         PaymentMethodModel(name: 'Razorpay', image: TImages.razorpay);
 
-    // Fetch coupons when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fetchAvailableCoupons();
     });
   }
 
-  /// Search coupons based on user input
   void searchCoupons(String query) {
     if (query.isEmpty) {
       searchResults.clear();
@@ -57,37 +56,18 @@ class CheckoutController extends GetxController {
     }).toList();
   }
 
-  /// Fetch available coupons based on cart total
   Future<void> fetchAvailableCoupons() async {
     try {
       isLoadingCoupons.value = true;
-      print('🔄 Fetching available coupons...');
-
-      // Get all active coupons
       final allCoupons = await _couponRepository.getActiveCoupons();
-      print('📦 Total active coupons found: ${allCoupons.length}');
-
       final cartTotal = _cartController.totalCartPrice.value;
-      print('🛒 Cart total: ₹${cartTotal.toStringAsFixed(0)}');
 
-      // Show ALL coupons that are active and valid (not just applicable)
-      // But mark which ones are applicable
       availableCoupons.value = allCoupons;
-
-      print('🎯 Total coupons to display: ${availableCoupons.value.length}');
-      for (var coupon in availableCoupons.value) {
-        final isApplicable = coupon.minimumOrderAmount == null ||
-            cartTotal >= coupon.minimumOrderAmount!;
-        print(
-            '   - ${coupon.code}: Min ₹${coupon.minimumOrderAmount ?? 0} -> ${isApplicable ? "✅ Applicable" : "❌ Not applicable"}');
-      }
 
       isLoadingCoupons.value = false;
     } catch (e) {
       isLoadingCoupons.value = false;
-      print('❌ Error fetching coupons: $e');
-      TLoaders.errorSnackBar(
-          title: 'Error', message: 'Failed to load coupons: $e');
+      print('Error fetching coupons: $e');
     }
   }
 
@@ -101,6 +81,7 @@ class CheckoutController extends GetxController {
         appliedCoupon.value = coupon;
         discountAmount.value = coupon.calculateDiscount(cartTotal);
         couponCode.value = code;
+        appliedCouponId.value = coupon.id; // ✅ Store coupon ID
         couponController.clear();
         searchResults.clear();
         TLoaders.successSnackBar(
@@ -121,6 +102,7 @@ class CheckoutController extends GetxController {
     discountAmount.value =
         coupon.calculateDiscount(_cartController.totalCartPrice.value);
     couponCode.value = coupon.code;
+    appliedCouponId.value = coupon.id; // ✅ Store coupon ID
     couponController.clear();
     searchResults.clear();
     TLoaders.successSnackBar(
@@ -133,6 +115,7 @@ class CheckoutController extends GetxController {
     appliedCoupon.value = null;
     discountAmount.value = 0;
     couponCode.value = '';
+    appliedCouponId.value = ''; // ✅ Clear coupon ID
     TLoaders.successSnackBar(
         title: 'Coupon Removed', message: 'Coupon has been removed');
   }

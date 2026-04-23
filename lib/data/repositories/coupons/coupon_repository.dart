@@ -22,22 +22,22 @@ class CouponRepository extends GetxController {
   Future<List<CouponModel>> getActiveCoupons() async {
     try {
       print('🔍 getActiveCoupons: Checking for active coupons...');
-      
+
       // First, check if any coupons exist at all
       final allDocs = await _db.collection(collectionName).get();
       print('📊 Total coupons in database: ${allDocs.docs.length}');
-      
+
       if (allDocs.docs.isEmpty) {
         print('⚠️ No coupons found in database! Please upload coupons first.');
         return [];
       }
-      
+
       // Get all active coupons
       final snapshot = await _db
           .collection(collectionName)
           .where('isActive', isEqualTo: true)
           .get();
-      
+
       print('📊 Active coupons (isActive=true): ${snapshot.docs.length}');
 
       // Filter expired coupons in memory
@@ -51,7 +51,8 @@ class CouponRepository extends GetxController {
             }
             final isValid = validTo.compareTo(now) > 0;
             if (!isValid) {
-              print('⏭️ Coupon ${doc['code']} is expired (validTo: ${validTo.toDate()})');
+              print(
+                  '⏭️ Coupon ${doc['code']} is expired (validTo: ${validTo.toDate()})');
             }
             return isValid;
           })
@@ -60,13 +61,42 @@ class CouponRepository extends GetxController {
 
       print('✅ Active and valid coupons: ${activeCoupons.length}');
       for (var coupon in activeCoupons) {
-        print('   - ${coupon.code}: Min ₹${coupon.minimumOrderAmount}, ${coupon.discountText}');
+        print(
+            '   - ${coupon.code}: Min ₹${coupon.minimumOrderAmount}, ${coupon.discountText}');
       }
-      
+
       return activeCoupons;
     } catch (e) {
       print('❌ getActiveCoupons error: $e');
       throw 'Failed to fetch active coupons: $e';
+    }
+  }
+
+  /// Get valid coupons for users (active and not expired)
+  Future<List<CouponModel>> getValidCoupons() async {
+    try {
+      final snapshot = await _db
+          .collection(collectionName)
+          .where('isActive', isEqualTo: true)
+          .get();
+
+      final now = Timestamp.now();
+
+      final validCoupons = snapshot.docs
+          .where((doc) {
+            final validTo = doc['validTo'] as Timestamp?;
+            return validTo != null && validTo.compareTo(now) > 0;
+          })
+          .map((doc) => CouponModel.fromSnapshot(doc))
+          .toList();
+
+      // Sort by discount value (highest first)
+      validCoupons.sort((a, b) => b.discountValue.compareTo(a.discountValue));
+
+      return validCoupons;
+    } catch (e) {
+      print('Error fetching valid coupons: $e');
+      return [];
     }
   }
 
@@ -119,16 +149,60 @@ class CouponRepository extends GetxController {
     }
   }
 
-  Future<void> incrementUsageCount(String couponId) async {
+  Future<void> incrementUsageCount(String couponId, String userId) async {
     try {
-      await _db.collection(collectionName).doc(couponId).update({
-        'usedCount': FieldValue.increment(1),
+      print('📈 Incrementing usage for coupon: $couponId, user: $userId');
+
+      // Get current coupon data
+      final docRef = _db.collection(collectionName).doc(couponId);
+      final doc = await docRef.get();
+
+      if (!doc.exists) {
+        print('❌ Coupon not found: $couponId');
+        return;
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      final currentUsedCount = (data['usedCount'] ?? 0) as int;
+      final currentUsedByUsers = List<String>.from(data['usedByUsers'] ?? []);
+      final currentUsageDetails =
+          Map<String, dynamic>.from(data['usageDetails'] ?? {});
+
+      // Update lists
+      final updatedUsedByUsers = [...currentUsedByUsers];
+      if (!updatedUsedByUsers.contains(userId)) {
+        updatedUsedByUsers.add(userId);
+      }
+
+      final updatedUsageDetails =
+          Map<String, dynamic>.from(currentUsageDetails);
+      updatedUsageDetails[userId] = Timestamp.now();
+
+      // Update Firestore
+      await docRef.update({
+        'usedCount': currentUsedCount + 1,
+        'usedByUsers': updatedUsedByUsers,
+        'usageDetails': updatedUsageDetails,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      print('✅ Coupon usage incremented: $couponId');
+
+      print(
+          '✅ Coupon usage updated: ${currentUsedCount + 1} total uses, ${updatedUsedByUsers.length} unique users');
     } catch (e) {
-      print('❌ Failed to update coupon usage: $e');
+      print('❌ Error updating coupon usage: $e');
       throw 'Failed to update coupon usage: $e';
+    }
+  }
+
+  Future<CouponModel?> getCouponById(String couponId) async {
+    try {
+      final doc = await _db.collection(collectionName).doc(couponId).get();
+      if (doc.exists) {
+        return CouponModel.fromSnapshot(doc);
+      }
+      return null;
+    } catch (e) {
+      throw 'Failed to fetch coupon: $e';
     }
   }
 

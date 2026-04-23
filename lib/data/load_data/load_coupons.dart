@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:yt_ecommerce_admin_panel/data/abstract/coupons.dart';
-import 'package:yt_ecommerce_admin_panel/data/repositories/orders/coupon_repository.dart';
+import 'package:yt_ecommerce_admin_panel/data/repositories/coupons/coupon_repository.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
 import 'package:yt_ecommerce_admin_panel/utils/popups/loaders.dart';

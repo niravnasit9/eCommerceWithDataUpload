@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:yt_ecommerce_admin_panel/common/widgets/success_screen/success_screen.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/authentication/authentication_repository.dart';
+import 'package:yt_ecommerce_admin_panel/data/repositories/coupons/coupon_repository.dart';
 import 'package:yt_ecommerce_admin_panel/data/repositories/orders/order_repository.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/controllers/address_controller.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/controller/product/cart_controller.dart';
@@ -26,7 +27,9 @@ class OrderController extends GetxController {
   AddressController get addressController => Get.find<AddressController>();
   CheckoutController get checkoutController => Get.find<CheckoutController>();
   OrderRepository get orderRepository => Get.find<OrderRepository>();
-  AuthenticationRepository get authRepository => Get.find<AuthenticationRepository>();
+  CouponRepository get _coupenRepository => Get.find<CouponRepository>();
+  AuthenticationRepository get authRepository =>
+      Get.find<AuthenticationRepository>();
 
   late Razorpay _razorpay;
   final RxBool isProcessingPayment = false.obs;
@@ -59,7 +62,6 @@ class OrderController extends GetxController {
     return 399;
   }
 
-  /// Calculate tax (GST 5%)
   double _calculateTax(double subtotal) {
     return subtotal * 0.05;
   }
@@ -69,6 +71,21 @@ class OrderController extends GetxController {
     final shipping = _calculateShipping(subtotal);
     final tax = _calculateTax(subtotal);
     return subtotal + shipping + tax - discount;
+  }
+
+  Future<void> _incrementCouponUsage() async {
+    try {
+      final couponId = checkoutController.appliedCouponId.value;
+      final userId = authRepository.authUser?.uid;
+
+      if (couponId.isNotEmpty && userId != null) {
+        final couponRepo = Get.find<CouponRepository>();
+        await couponRepo.incrementUsageCount(couponId, userId);
+        print('✅ Coupon usage incremented for: $couponId');
+      }
+    } catch (e) {
+      print('❌ Error incrementing coupon usage: $e');
+    }
   }
 
   /// ---------------- FETCH ORDERS ----------------
@@ -113,15 +130,17 @@ class OrderController extends GetxController {
         return;
       }
 
-      /// Create clean order ID
-      final orderId = 'ORD-${DateTime.now().millisecondsSinceEpoch}';
+      /// Create readable order ID (e.g., ORD-20241215-143025)
+      final timestamp = DateTime.now();
+      final orderId =
+          'ORD-${timestamp.year}${timestamp.month.toString().padLeft(2, '0')}${timestamp.day.toString().padLeft(2, '0')}-${timestamp.hour.toString().padLeft(2, '0')}${timestamp.minute.toString().padLeft(2, '0')}${timestamp.second.toString().padLeft(2, '0')}';
 
-      /// Get cart subtotal
-      final subtotal = cartController.totalCartPrice.value;
-      final discount = checkoutController.discountAmount.value;
-      
       /// Calculate final amount with shipping and tax
-      final finalAmount = _calculateFinalTotal(subtotal, discount);
+      final subtotal = cartController.totalCartPrice.value;
+      final shipping = _calculateShipping(subtotal);
+      final tax = _calculateTax(subtotal);
+      final discount = checkoutController.discountAmount.value;
+      final finalAmount = subtotal + shipping + tax - discount;
 
       /// Store pending order
       _pendingOrder = OrderModel(
@@ -136,6 +155,9 @@ class OrderController extends GetxController {
         items: cartController.cartItems.toList(),
         couponCode: checkoutController.couponCode.value,
         discountAmount: discount,
+        subtotal: subtotal,
+        shippingCost: shipping,
+        taxAmount: tax,
       );
 
       isProcessingPayment.value = true;
@@ -189,9 +211,12 @@ class OrderController extends GetxController {
       final userId = authRepository.authUser?.uid;
       if (userId == null || _pendingOrder == null) return;
 
-      TFullScreenLoader.openLoadingDialog('Saving order...', TImages.pencilAnimation);
+      // ✅ Increment coupon usage BEFORE saving order
+      await _incrementCouponUsage();
 
-      /// Update order with payment details
+      TFullScreenLoader.openLoadingDialog(
+          'Saving order...', TImages.pencilAnimation);
+
       final finalOrder = _pendingOrder!.copyWith(
         status: OrderStatus.confirmed,
         paymentId: response.paymentId,
@@ -201,7 +226,7 @@ class OrderController extends GetxController {
       await orderRepository.saveOrder(finalOrder, userId);
 
       cartController.clearCart();
-      checkoutController.removeCoupon(); // Reset coupon after order
+      checkoutController.removeCoupon();
 
       TFullScreenLoader.stopLoading();
 
@@ -227,7 +252,8 @@ class OrderController extends GetxController {
 
     TLoaders.errorSnackBar(
       title: 'Payment Failed',
-      message: response.message ?? 'Please try again with a different payment method.',
+      message: response.message ??
+          'Please try again with a different payment method.',
     );
   }
 
@@ -240,7 +266,8 @@ class OrderController extends GetxController {
   /// ---------------- COD ----------------
   void processCODOrder(double totalAmount) async {
     try {
-      TFullScreenLoader.openLoadingDialog('Placing order...', TImages.pencilAnimation);
+      TFullScreenLoader.openLoadingDialog(
+          'Placing order...', TImages.pencilAnimation);
 
       final userId = authRepository.authUser?.uid;
       if (userId == null) {
@@ -249,15 +276,21 @@ class OrderController extends GetxController {
         return;
       }
 
-      /// Get cart subtotal
+      // ✅ Increment coupon usage BEFORE saving order
+      await _incrementCouponUsage();
+
+      final timestamp = DateTime.now();
+      final orderId =
+          'ORD-${timestamp.year}${timestamp.month.toString().padLeft(2, '0')}${timestamp.day.toString().padLeft(2, '0')}-${timestamp.hour.toString().padLeft(2, '0')}${timestamp.minute.toString().padLeft(2, '0')}${timestamp.second.toString().padLeft(2, '0')}';
+
       final subtotal = cartController.totalCartPrice.value;
+      final shipping = _calculateShipping(subtotal);
+      final tax = _calculateTax(subtotal);
       final discount = checkoutController.discountAmount.value;
-      
-      /// Calculate final amount with shipping and tax
-      final finalAmount = _calculateFinalTotal(subtotal, discount);
+      final finalAmount = subtotal + shipping + tax - discount;
 
       final order = OrderModel(
-        id: 'ORD-${DateTime.now().millisecondsSinceEpoch}',
+        id: orderId,
         userId: userId,
         status: OrderStatus.pending,
         totalAmount: finalAmount,
@@ -268,19 +301,23 @@ class OrderController extends GetxController {
         items: cartController.cartItems.toList(),
         couponCode: checkoutController.couponCode.value,
         discountAmount: discount,
+        subtotal: subtotal,
+        shippingCost: shipping,
+        taxAmount: tax,
       );
 
       await orderRepository.saveOrder(order, userId);
 
       cartController.clearCart();
-      checkoutController.removeCoupon(); // Reset coupon after order
+      checkoutController.removeCoupon();
 
       TFullScreenLoader.stopLoading();
 
       Get.offAll(() => SuccessScreen(
             image: TImages.orderCompletedAnimation,
             title: 'Order Placed!',
-            subTitle: 'Cash on Delivery selected. Our team will contact you shortly.',
+            subTitle:
+                'Cash on Delivery selected. Our team will contact you shortly.',
             onPressed: () => Get.offAll(() => const NavigationMenu()),
           ));
     } catch (e) {

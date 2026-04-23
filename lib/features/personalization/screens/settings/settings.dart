@@ -11,6 +11,7 @@ import 'package:yt_ecommerce_admin_panel/features/personalization/screens/addres
 import 'package:yt_ecommerce_admin_panel/features/personalization/screens/profile/profile.dart';
 import 'package:yt_ecommerce_admin_panel/features/personalization/screens/settings/widgets/theme_toggle.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/cart/cart.dart';
+import 'package:yt_ecommerce_admin_panel/features/shop/screens/coupons/my_coupons.dart';
 import 'package:yt_ecommerce_admin_panel/features/shop/screens/order/order.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/colors.dart';
 import 'package:yt_ecommerce_admin_panel/utils/constants/sizes.dart';
@@ -86,7 +87,9 @@ class SettingsScreen extends StatelessWidget {
                     icon: Iconsax.discount_shape,
                     title: 'My Coupons',
                     subTitle: 'List of all the discounted coupons',
-                    onTap: () {},
+                    onTap: () {
+                      Get.to(() => const MyCouponsScreen());
+                    },
                   ),
                   TSettingsMenuTile(
                     icon: Iconsax.notification,
